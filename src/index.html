@@ -6,8 +6,14 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Chart</title>
 </head>
+<style>
+    #canvas-search {
+        display: block;
+        margin-top: 12px;
+    }
+</style>
 <body>
-    <canvas id="canvas"></canvas>
+    <div class="chart"></div>
     <script src="<%= htmlWebpackPlugin.files.chunks.chart.entry %>"></script>
 </body>
 </html>
