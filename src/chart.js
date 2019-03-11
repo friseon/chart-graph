@@ -1,3 +1,10 @@
+import {
+    getMax,
+    getDates,
+    getDividers,
+    prepareData
+} from './utils';
+
 export default class Chart {
     constructor(params) {
         const canvas = document.getElementById(params.idCanvas);
@@ -22,40 +29,15 @@ export default class Chart {
      * @param {Array} data – сырые данные
      */
     _prepareChartParams(data) {
-        const maxs = [];
-        const mins = [];
-        const deviders = [];
-        const devidersAmount = 6;
-
-        const dates = data.columns.find(column => data.types[column[0]] === "x").slice(1);
-        const lines = data.columns.filter(column => data.types[column[0]] === "line");
-        const preparedData = lines.map(line => {
-            const tag = line.shift();
-
-            return {
-                name: data.names[tag],
-                color: data.colors[tag],
-                data: line
-            }
-        });
-
-        preparedData.forEach(item => {
-            maxs.push(Math.max.apply(null, item.data));
-            mins.push(Math.min.apply(null, item.data));
-        });
-        const min = Math.min.apply(null, mins);
-        const max = Math.max.apply(null, maxs);
-
-        for (let i = 0; i < devidersAmount; i++) {
-            deviders.push(Math.floor(max / devidersAmount * i));
-        }
+        const dates = getDates(data);
+        const preparedData = prepareData(data);
+        const max = getMax(preparedData);
+        const deviders = getDividers(max);
 
         this.lines = preparedData;
-
         this.chartParams = {
-            deviders: deviders.sort((a, b) => (a - b)),
+            deviders,
             dates,
-            min,
             max,
             step: this.width / dates.length
         };
@@ -70,6 +52,11 @@ export default class Chart {
         this._drawDividers();
     }
 
+    /**
+     * Перевод значения в данных на отображение в графике
+     * 
+     * @param {Number} val – значение в данных
+     */
     _prepareValue(val) {
         return this.height - this.height / this.chartParams.max * val;
     }
