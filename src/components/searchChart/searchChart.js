@@ -1,7 +1,9 @@
-import { Chart } from '../chart/chart.js';
+import Chart from '../chart/chart.js';
 
-export class SearchChart extends Chart {
+class SearchChart extends Chart {
     _prepareValue(val) {
         return this.height - this.height / this.chartParams.max * val;
     }
 }
+
+export default SearchChart;

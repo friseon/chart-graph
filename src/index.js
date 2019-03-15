@@ -1,23 +1,16 @@
 import {
-    MainChart,
-    SearchChart
+    SearchController
 } from './components';
+
 import prod_data from './data/chart_data.json';
 import test_data from './data/data.json';
 
 const data = test_data[0];
+// const data = prod_data[4];
 
-const mainChart = new MainChart({
+const searchController = new SearchController({
     idCanvas: "main-chart",
     data
 });
 
-const searchChart = new SearchChart({
-    idCanvas: "search-chart",
-    data,
-    width: 800,
-    height: 100
-});
-
-mainChart.draw();
-searchChart.draw();
+searchController.init();

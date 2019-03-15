@@ -1,17 +1,14 @@
 import {
-    getMax,
-    getDates,
-    prepareData
+    getMax
 } from './../../utils';
 
-export class Chart {
+class Chart {
     constructor(params) {
-        const chartContainer = document.querySelector('.chart');
         const canvas = document.createElement('canvas');
 
         canvas.id = params.idCanvas;
 
-        chartContainer.appendChild(canvas);
+        params.chartContainer.appendChild(canvas);
 
         this.width = canvas.width = params.width || 800;
         this.height = canvas.height = params.height || 600;
@@ -34,15 +31,13 @@ export class Chart {
      * @param {Array} data – сырые данные
      */
     _prepareChartParams(data) {
-        const preparedData = prepareData(data);
-        const max = getMax(preparedData);
-        const dates = getDates(data);
+        const max = getMax(data.lines);
 
-        this.lines = preparedData;
+        this.lines = data.lines;
         this.chartParams = {
-            dates,
+            dates: data.dates,
             max,
-            step: this.width / dates.length
+            step: this.width / data.dates.length
         };
     }
 
@@ -52,6 +47,12 @@ export class Chart {
     draw() {
         this._drawBackground();
         this._drawCharts();
+    }
+
+    redraw(data) {
+        this._prepareChartParams(data);
+        this.clear();
+        this.draw();
     }
 
     /**
@@ -152,4 +153,13 @@ export class Chart {
     _endDraw() {
         this.ctx.restore();
     }
+
+    /**
+     * Очистка холста
+     */
+    clear() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+    }
 }
+
+export default Chart;

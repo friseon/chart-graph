@@ -1,9 +1,9 @@
 import {
     getDividers
 } from './../../utils';
-import { Chart } from '../chart/chart';
+import Chart from '../chart/chart';
 
-export class MainChart extends Chart {
+class MainChart extends Chart {
     _prepareChartParams(data) {
         super._prepareChartParams(data);
 
@@ -20,3 +20,5 @@ export class MainChart extends Chart {
         this._drawDividers();
     }
 }
+
+export default MainChart;
