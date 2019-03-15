@@ -1,11 +1,23 @@
-import Chart from './chart.js';
-import data from './data/chart_data.json';
+import {
+    MainChart,
+    SearchChart
+} from './components';
+import prod_data from './data/chart_data.json';
 import test_data from './data/data.json';
 
-const chart = new Chart({
-    idCanvas: "canvas",
-    // data: data[4]
-    data: test_data[0]
+const data = test_data[0];
+
+const mainChart = new MainChart({
+    idCanvas: "main-chart",
+    data
 });
 
-chart.draw();
+const searchChart = new SearchChart({
+    idCanvas: "search-chart",
+    data,
+    width: 800,
+    height: 100
+});
+
+mainChart.draw();
+searchChart.draw();
