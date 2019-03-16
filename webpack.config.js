@@ -10,6 +10,7 @@ const optimization = {
 
 const OUTPUT_PATH = './dist';
 const SOURCE_PATH = './src';
+
 module.exports = (env, options) => {
     const isProd = options.mode === 'production';
 
