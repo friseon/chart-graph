@@ -1,7 +1,30 @@
 .search-panel {
     margin-top: 12px;
+    padding-left: 20px;
+
+    #search-chart {
+        pointer-events: none;
+    }
 
     .filter-panel {
         display: flex;
+    }
+
+    .range-panel {
+        position: relative;
+    }
+
+    .range {
+        position: absolute;
+        height: 100%;
+        width: 8px;
+        background-color: #000;
+        top: 0;
+        left: 50%;
+        cursor: pointer;
+
+        &.range-start {
+            left: 30%;
+        }
     }
 }

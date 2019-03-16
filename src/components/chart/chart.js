@@ -13,7 +13,7 @@ class Chart {
         this.width = canvas.width = params.width || 800;
         this.height = canvas.height = params.height || 600;
 
-        this.ctx = canvas.getContext("2d");
+        this.ctx = canvas.getContext('2d');
 
         this.colors = {
             bg: params.bgColors || {
@@ -94,9 +94,9 @@ class Chart {
         this.chartParams.deviders.forEach(devider => {
             const preparedValue = this._prepareValue(devider);
 
-            this._startLine(0, preparedValue, "#f5f5f5", 0.5);
-            this.ctx.font = "12px Arial";
-            this.ctx.fillStyle = "#f5f5f5";
+            this._startLine(0, preparedValue, '#f5f5f5', 0.5);
+            this.ctx.font = '12px Arial';
+            this.ctx.fillStyle = '#f5f5f5';
             this.ctx.fillText(devider, 5, preparedValue - 5);
             this._drawLine(this.width, preparedValue);
             this._endDraw();

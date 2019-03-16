@@ -1,6 +1,7 @@
 import {
     SearchChart,
-    LineFilter
+    LineFilter,
+    RangeController
 } from './../index';
 
 import './searchPanel.scss';
@@ -14,16 +15,21 @@ class SearchPanel {
         this.data = params.data;
         this.panelContainer = document.createElement('div');
         this.panelContainer.classList.add('search-panel');
+        this.panelContainer.style.width = params.width + 'px';
+
+        this.rangePanel = new RangeController({
+            container: this.panelContainer
+        });
 
         const filterPanel = document.createElement('div');
         filterPanel.classList.add('filter-panel');
 
         this.searchChart = new SearchChart({
-            idCanvas: "search-chart",
+            idCanvas: 'search-chart',
             data: this.data,
-            width: 800,
+            width: params.width,
             height: 100,
-            container: this.panelContainer
+            container: this.rangePanel.container
         });
 
         this._onUpdate = params._onUpdate;
@@ -42,12 +48,15 @@ class SearchPanel {
             })
         });
 
+        this.panelContainer.appendChild(this.rangePanel.container);
         this.panelContainer.appendChild(filterPanel);
+
         params.container.appendChild(this.panelContainer);
     }
 
     init() {
         this._updateCharts();
+        this.rangePanel.init();
     }
 
     _updateFilters(name, status) {

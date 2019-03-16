@@ -10,7 +10,8 @@ const data = test_data[0];
 
 const mainController = new MainController({
     idCanvas: "main-chart",
-    data
+    data,
+    width: 800
 });
 
 mainController.init();

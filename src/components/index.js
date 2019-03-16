@@ -4,6 +4,7 @@ import SearchChart from './searchChart/searchChart';
 import MainController from './mainController/mainController';
 import LineFilter from './lineFilter/lineFilter';
 import SearchPanel from './searchPanel/searchPanel';
+import RangeController from './rangeController/rangeController';
 
 export {
     Chart,
@@ -11,5 +12,6 @@ export {
     SearchChart,
     MainController,
     LineFilter,
-    SearchPanel
+    SearchPanel,
+    RangeController
 }

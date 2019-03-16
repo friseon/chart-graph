@@ -20,6 +20,7 @@ class MainController {
         this.searchPanel = new SearchPanel({
             data: this.data,
             container: this.chartContainer,
+            width: params.width,
             _onUpdate: (data) => {
                 this.mainChart.redraw(data);
             }
