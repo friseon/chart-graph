@@ -8,7 +8,7 @@ class Chart {
 
         canvas.id = params.idCanvas;
 
-        params.chartContainer.appendChild(canvas);
+        params.container.appendChild(canvas);
 
         this.width = canvas.width = params.width || 800;
         this.height = canvas.height = params.height || 600;

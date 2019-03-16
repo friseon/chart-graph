@@ -1,13 +1,15 @@
 import Chart from './chart/chart';
 import MainChart from './mainChart/mainChart';
 import SearchChart from './searchChart/searchChart';
-import SearchController from './searchController/searchController';
+import MainController from './mainController/mainController';
 import LineFilter from './lineFilter/lineFilter';
+import SearchPanel from './searchPanel/searchPanel';
 
 export {
     Chart,
     MainChart,
     SearchChart,
-    SearchController,
-    LineFilter
+    MainController,
+    LineFilter,
+    SearchPanel
 }

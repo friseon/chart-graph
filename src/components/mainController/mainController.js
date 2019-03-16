@@ -1,14 +1,14 @@
 import {
     prepareData
-} from './../../utils';
+} from '../../utils';
 
 import {
     MainChart,
-    SearchChart,
+    SearchPanel,
     LineFilter
-} from './../index';
+} from '../index';
 
-class SearchController {
+class MainController {
     constructor(params) {
         this.data = prepareData(params.data);
         this.chartContainer = document.querySelector('.chart');
@@ -19,15 +19,12 @@ class SearchController {
         this.mainChart = new MainChart({
             idCanvas: "main-chart",
             data: this.data,
-            chartContainer: this.chartContainer
+            container: this.chartContainer
         });
 
-        this.searchChart = new SearchChart({
-            idCanvas: "search-chart",
+        this.searchPanel = new SearchPanel({
             data: this.data,
-            width: 800,
-            height: 100,
-            chartContainer: this.chartContainer
+            container: this.chartContainer
         });
     }
 
@@ -35,10 +32,10 @@ class SearchController {
         this.data.lines.forEach(item => {
             this._updateFilters(item.name, true);
 
-            return new LineFilter({
+            new LineFilter({
                 name: item.name,
                 color: item.color,
-                chartContainer: this.chartContainer,
+                container: this.chartContainer,
                 callback: (name, status) => {
                     this._updateFilters(name, status);
                     this._updateCharts()
@@ -62,8 +59,8 @@ class SearchController {
         };
 
         this.mainChart.redraw(filteredData);
-        this.searchChart.redraw(filteredData);
+        this.searchPanel.updateChart(filteredData);
     }
 }
 
-export default SearchController;
+export default MainController;
