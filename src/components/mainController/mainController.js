@@ -11,6 +11,7 @@ class MainController {
     constructor(params) {
         this.data = prepareData(params.data);
         this.chartContainer = document.querySelector('.chart');
+
         this.mainChart = new MainChart({
             idCanvas: "main-chart",
             data: this.data,
@@ -29,7 +30,6 @@ class MainController {
 
     init() {
         this.searchPanel.init();
-        // this.mainChart.draw()
     }
 }
 

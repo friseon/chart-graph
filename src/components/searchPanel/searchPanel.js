@@ -21,7 +21,8 @@ class SearchPanel {
         this.rangePanel = new RangeController({
             container: this.panelContainer,
             _onUpdate: this._calcRange.bind(this),
-            width: params.width
+            width: params.width,
+            step: params.width / (params.data.dates.length - 1)
         });
 
         const filterPanel = document.createElement('div');
@@ -76,9 +77,13 @@ class SearchPanel {
 
     _getFilteredData(type) {
         let dates = this.data.dates;
+        let start = this.startIndex - 1;
+        if (Number(start) <= 0) {
+            start = 0;
+        }
 
         if (type === 'main') {
-            dates = dates.slice(this.startIndex - 1, this.endIndex);
+            dates = dates.slice(start, this.endIndex);
         }
 
         const filteredData = {
@@ -93,7 +98,7 @@ class SearchPanel {
                     }
 
                     const filtered = {...line};
-                    filtered.data = filtered.data.slice(this.startIndex - 1, this.endIndex);
+                    filtered.data = filtered.data.slice(start, this.endIndex);
 
                     return filtered;
                 })

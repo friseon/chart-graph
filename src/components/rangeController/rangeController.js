@@ -23,6 +23,7 @@ class RangeController {
         params.container.appendChild(rangePanel);
 
         this.container = rangePanel;
+        this.step = params.step;
     }
 
     init() {
@@ -40,6 +41,7 @@ class RangeController {
         this.rangeStart.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'start'));
         this.rangeEnd.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'end'));
 
+        this._roundCoords()
         this._updateChart(this.currentCoords)
     }
 
@@ -49,6 +51,7 @@ class RangeController {
         const onRangeUp = () => {
             document.removeEventListener('pointermove', move);
             document.removeEventListener('pointerup', onRangeUp);
+            this._roundCoords();
             this._updateChart(this.currentCoords)
         }
 
@@ -79,9 +82,17 @@ class RangeController {
         return newCoords;
     }
 
+    _roundCoords() {
+        this.currentCoords.start = Math.round(this.currentCoords.start / this.step) * this.step;
+        this.currentCoords.end = Math.round(this.currentCoords.end / this.step) * this.step;
+
+        this.rangeStart.style.left = this.currentCoords.start  + 'px';
+        this.rangeEnd.style.left = this.currentCoords.end + 'px';
+    }
+
     _updateCoords(coords, type) {
         if (type === 'start') {
-            this.rangeStart.style.left = coords + 'px';
+            this.rangeStart.style.left = coords  + 'px';
         }
         if (type === 'end') {
             this.rangeEnd.style.left = coords + 'px';
