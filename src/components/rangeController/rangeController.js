@@ -1,3 +1,5 @@
+import './rangeController.scss';
+
 class RangeController {
     constructor(params) {
         const rangePanel = document.createElement('div');
@@ -5,6 +7,9 @@ class RangeController {
 
         const range = document.createElement('div');
         range.classList.add('range');
+
+        this.rangeBox = document.createElement('div');
+        this.rangeBox.classList.add('range-box');
 
         this.currentCoords = {
             start: params.width * .3,
@@ -18,12 +23,14 @@ class RangeController {
         this._updateChart = params._onUpdate;
 
         rangePanel.appendChild(this.rangeStart);
+        rangePanel.appendChild(this.rangeBox);
         rangePanel.appendChild(this.rangeEnd);
 
         params.container.appendChild(rangePanel);
 
         this.container = rangePanel;
         this.step = params.step;
+        this.width = params.width;
     }
 
     init() {
@@ -34,24 +41,30 @@ class RangeController {
             right: containerParams.width
         };
 
-
         this._updateCoords(this.currentCoords.start, 'start');
         this._updateCoords(this.currentCoords.end, 'end');
 
         this.rangeStart.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'start'));
         this.rangeEnd.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'end'));
 
+        this.rangeBox.addEventListener('pointerdown', (eventStart) => this._onRangeBoxChange(eventStart));
+
         this._roundCoords()
         this._updateChart(this.currentCoords)
     }
 
-    _onRangeChange(eventStart, type) {
+    _onRangeBoxChange(eventStart) {
+        this._onRangeChange(eventStart, 'start', true);
+        this._onRangeChange(eventStart, 'end', true);
+    }
+
+    _onRangeChange(eventStart, type, isBox) {
         const move = (eventMove) => this._onRangeMove.call(this, eventMove, type);
 
         const onRangeUp = () => {
             document.removeEventListener('pointermove', move);
             document.removeEventListener('pointerup', onRangeUp);
-            this._roundCoords();
+            this._roundCoords(isBox);
             this._updateChart(this.currentCoords)
         }
 
@@ -62,14 +75,14 @@ class RangeController {
     }
 
     _calculateNewCoords(shift, type) {
-        const current = type === 'start' ? this.rangeStart.offsetLeft : this.rangeEnd.offsetLeft
+        const current = type === 'start' ? this.rangeStart.offsetWidth : this.rangeEnd.offsetLeft
         let newCoords = current - shift;
 
         if (type === 'start' && newCoords > this.rangeEnd.offsetLeft - 20) {
             newCoords = this.rangeEnd.offsetLeft - 20;
         }
-        if (type === 'end' && newCoords < this.rangeStart.offsetLeft + 20) {
-            newCoords = this.rangeStart.offsetLeft + 20;
+        if (type === 'end' && newCoords < this.rangeStart.offsetWidth + 20) {
+            newCoords = this.rangeStart.offsetWidth + 20;
         }
 
         if (newCoords > this.limits.right) {
@@ -82,21 +95,30 @@ class RangeController {
         return newCoords;
     }
 
-    _roundCoords() {
-        this.currentCoords.start = Math.round(this.currentCoords.start / this.step) * this.step;
-        this.currentCoords.end = Math.round(this.currentCoords.end / this.step) * this.step;
+    _roundCoords(isBox) {
+        const start = isBox ? this.rangeStart.offsetWidth : this.currentCoords.start;
+        const end = isBox ? this.rangeEnd.offsetLeft : this.currentCoords.end;
 
-        this.rangeStart.style.left = this.currentCoords.start  + 'px';
+        this.currentCoords.start = Math.round(start / this.step) * this.step;
+        this.currentCoords.end = Math.round(end / this.step) * this.step;
+
+        this.rangeStart.style.right = this.width - this.currentCoords.start  + 'px';
         this.rangeEnd.style.left = this.currentCoords.end + 'px';
+
+        this.rangeBox.style.left = this.rangeStart.offsetWidth + 'px';
+        this.rangeBox.style.right = this.rangeEnd.offsetWidth + 'px';
     }
 
     _updateCoords(coords, type) {
         if (type === 'start') {
-            this.rangeStart.style.left = coords  + 'px';
+            this.rangeStart.style.right = this.width - coords  + 'px';
         }
         if (type === 'end') {
             this.rangeEnd.style.left = coords + 'px';
         }
+
+        this.rangeBox.style.left = this.rangeStart.offsetWidth + 'px';
+        this.rangeBox.style.right = this.rangeEnd.offsetWidth + 'px';
     }
 
     _onRangeMove(e, type) {
