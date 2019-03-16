@@ -13,12 +13,15 @@ class SearchPanel {
         };
 
         this.data = params.data;
+        this.width = params.width;
         this.panelContainer = document.createElement('div');
         this.panelContainer.classList.add('search-panel');
         this.panelContainer.style.width = params.width + 'px';
 
         this.rangePanel = new RangeController({
-            container: this.panelContainer
+            container: this.panelContainer,
+            _onUpdate: this._calcRange.bind(this),
+            width: params.width
         });
 
         const filterPanel = document.createElement('div');
@@ -43,7 +46,8 @@ class SearchPanel {
                 container: filterPanel,
                 callback: (name, status) => {
                     this._updateFilters(name, status);
-                    this._updateCharts()
+                    this._updateMainChart();
+                    this._updateSearchChart();
                 }
             })
         });
@@ -55,24 +59,55 @@ class SearchPanel {
     }
 
     init() {
-        this._updateCharts();
+        this._updateSearchChart();
         this.rangePanel.init();
+    }
+
+    _calcRange(range) { 
+        const length = this.data.dates.length + 1;
+        this.startIndex = Math.ceil(length / this.width * range.start);
+        this.endIndex = Math.floor(length / this.width * range.end);
+        this._updateMainChart();
     }
 
     _updateFilters(name, status) {
         this._state.filters[name] = status;
     }
 
-    _updateCharts() {
+    _getFilteredData(type) {
+        let dates = this.data.dates;
+
+        if (type === 'main') {
+            dates = dates.slice(this.startIndex - 1, this.endIndex);
+        }
+
         const filteredData = {
-            dates: this.data.dates,
-            lines: this.data.lines.filter(line => {
-                return this._state.filters[line.name];
-            })
+            dates,
+            lines: this.data.lines
+                .filter(line => {
+                    return this._state.filters[line.name];
+                })
+                .map(line => {
+                    if (type === 'search') {
+                        return line;
+                    }
+
+                    const filtered = {...line};
+                    filtered.data = filtered.data.slice(this.startIndex - 1, this.endIndex);
+
+                    return filtered;
+                })
         };
 
-        this.searchChart.redraw(filteredData);
-        this._onUpdate(filteredData);
+        return filteredData;
+    }
+
+    _updateSearchChart() {
+        this.searchChart.redraw(this._getFilteredData('search'));
+    }
+
+    _updateMainChart() {
+        this._onUpdate(this._getFilteredData('main'));
     }
 }
 

@@ -7,14 +7,15 @@ class RangeController {
         range.classList.add('range');
 
         this.currentCoords = {
-            start: 30,
-            end: 60
+            start: params.width * .3,
+            end: params.width * .6
         };
 
         this.rangeStart = range.cloneNode(true);
         this.rangeStart.classList.add('range-start');
         this.rangeEnd = range.cloneNode(true);
         this.rangeEnd.classList.add('range-end');
+        this._updateChart = params._onUpdate;
 
         rangePanel.appendChild(this.rangeStart);
         rangePanel.appendChild(this.rangeEnd);
@@ -32,8 +33,14 @@ class RangeController {
             right: containerParams.width
         };
 
+
+        this._updateCoords(this.currentCoords.start, 'start');
+        this._updateCoords(this.currentCoords.end, 'end');
+
         this.rangeStart.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'start'));
         this.rangeEnd.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'end'));
+
+        this._updateChart(this.currentCoords)
     }
 
     _onRangeChange(eventStart, type) {
@@ -42,6 +49,7 @@ class RangeController {
         const onRangeUp = () => {
             document.removeEventListener('pointermove', move);
             document.removeEventListener('pointerup', onRangeUp);
+            this._updateChart(this.currentCoords)
         }
 
         document.addEventListener('pointermove', move);

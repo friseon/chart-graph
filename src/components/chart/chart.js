@@ -37,7 +37,7 @@ class Chart {
         this.chartParams = {
             dates: data.dates,
             max,
-            step: this.width / data.dates.length
+            step: this.width / (data.dates.length - 1)
         };
     }
 

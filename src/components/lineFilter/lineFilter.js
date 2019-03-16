@@ -26,7 +26,7 @@ class LineFilter {
         filterLabel.appendChild(filterTitle);
         filterLabel.classList.add('line-filter');
 
-        filterLabel.addEventListener('click', (e) => {
+        filterLabel.addEventListener('change', (e) => {
             filterMarker.style.backgroundColor = e.target.checked ? params.color : 'transparent';
             params.callback(params.name, e.target.checked);
         })
