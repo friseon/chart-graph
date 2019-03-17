@@ -13,7 +13,7 @@
         cursor: pointer;
     }
 
-    .range {
+    .range-marker {
         position: absolute;
         height: 100%;
         background-color: #000;
@@ -24,12 +24,12 @@
         border-style: solid;
         opacity: .3;
 
-        &.range-start {
+        &.marker-start {
             left: 0;
             border-right-width: 8px;
         }
 
-        &.range-end {
+        &.marker-end {
             right: 0;
             border-left-width: 8px;
         }

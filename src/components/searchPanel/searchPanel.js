@@ -18,11 +18,13 @@ class SearchPanel {
         this.panelContainer.classList.add('search-panel');
         this.panelContainer.style.width = params.width + 'px';
 
+        this.step = params.width / (params.data.dates.length - 1);
+
         this.rangePanel = new RangeController({
             container: this.panelContainer,
-            _onUpdate: this._calcRange.bind(this),
+            onUpdate: this._calcRange.bind(this),
             width: params.width,
-            step: params.width / (params.data.dates.length - 1)
+            step: this.step
         });
 
         const filterPanel = document.createElement('div');
@@ -64,17 +66,43 @@ class SearchPanel {
         this.rangePanel.init();
     }
 
-    _calcRange(range) { 
+    /**
+     * Задаёт диапазон периода для графика
+     * 
+     * @param {*} range 
+     */
+    _calcRange(range) {
         const length = this.data.dates.length + 1;
-        this.startIndex = Math.ceil(length / this.width * range.start);
-        this.endIndex = Math.floor(length / this.width * range.end);
+        const prop = length / this.width;
+
+        this.startIndex = Math.round(prop * range.start);
+        this.endIndex = Math.round(prop * range.end);
+
+        // TODO: есть косяки при малом количестве данных
+        if (this.startIndex === this.endIndex && this.endIndex !== length) {
+            this.endIndex++;
+        } else if (this.startIndex === this.endIndex && this.endIndex === length) {
+            this.startIndex--;
+        }
+
         this._updateMainChart();
     }
 
+    /**
+     * Обновление состояние фильтров (отображение линий графика)
+     * 
+     * @param {String} name 
+     * @param {Boolean} status 
+     */
     _updateFilters(name, status) {
         this._state.filters[name] = status;
     }
 
+    /**
+     * Фильтруем данные для графика
+     * 
+     * @param {String} type - тип графика
+     */
     _getFilteredData(type) {
         let dates = this.data.dates;
         let start = this.startIndex - 1;
@@ -94,10 +122,12 @@ class SearchPanel {
                 })
                 .map(line => {
                     if (type === 'search') {
+                        // не кромсамаем линии по диапазону для поискового графика
                         return line;
                     }
 
                     const filtered = {...line};
+
                     filtered.data = filtered.data.slice(start, this.endIndex);
 
                     return filtered;

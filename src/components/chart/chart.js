@@ -88,22 +88,6 @@ class Chart {
     }
 
     /**
-     * Рисование горизонтальных разделителей
-     */
-    _drawDividers() {
-        this.chartParams.deviders.forEach(devider => {
-            const preparedValue = this._prepareValue(devider);
-
-            this._startLine(0, preparedValue, '#f5f5f5', 0.5);
-            this.ctx.font = '12px Arial';
-            this.ctx.fillStyle = '#f5f5f5';
-            this.ctx.fillText(devider, 5, preparedValue - 5);
-            this._drawLine(this.width, preparedValue);
-            this._endDraw();
-        });
-    }
-
-    /**
      * Подложка для графика
      */
     _drawBackground() {

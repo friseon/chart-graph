@@ -6,25 +6,26 @@ class RangeController {
         rangePanel.classList.add('range-panel');
 
         const range = document.createElement('div');
-        range.classList.add('range');
+        range.classList.add('range-marker');
 
         this.rangeBox = document.createElement('div');
         this.rangeBox.classList.add('range-box');
 
+        // выставляем стартовые позиции для диапазона
         this.currentCoords = {
             start: params.width * .3,
             end: params.width * .6
         };
 
-        this.rangeStart = range.cloneNode(true);
-        this.rangeStart.classList.add('range-start');
-        this.rangeEnd = range.cloneNode(true);
-        this.rangeEnd.classList.add('range-end');
-        this._updateChart = params._onUpdate;
+        this.rangeMarkerStart = range.cloneNode(true);
+        this.rangeMarkerStart.classList.add('marker-start');
+        this.rangeMarkerEnd = range.cloneNode(true);
+        this.rangeMarkerEnd.classList.add('marker-end');
+        this.onUpdate = params.onUpdate;
 
-        rangePanel.appendChild(this.rangeStart);
+        rangePanel.appendChild(this.rangeMarkerStart);
         rangePanel.appendChild(this.rangeBox);
-        rangePanel.appendChild(this.rangeEnd);
+        rangePanel.appendChild(this.rangeMarkerEnd);
 
         params.container.appendChild(rangePanel);
 
@@ -36,55 +37,67 @@ class RangeController {
     init() {
         const containerParams = this.container.getBoundingClientRect();
 
+        // куда нельзя выходить маркерам диапазона
         this.limits = {
             left: 0,
             right: containerParams.width
         };
 
-        this._updateCoords(this.currentCoords.start, 'start');
-        this._updateCoords(this.currentCoords.end, 'end');
+        this.rangeMarkerStart.addEventListener('pointerdown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'start'));
+        this.rangeMarkerEnd.addEventListener('pointerdown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'end'));
+        this.rangeBox.addEventListener('pointerdown', (eventStart) => this._onStartMoveRangeBox(eventStart));
 
-        this.rangeStart.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'start'));
-        this.rangeEnd.addEventListener('pointerdown', (eventStart) => this._onRangeChange(eventStart, 'end'));
-
-        this.rangeBox.addEventListener('pointerdown', (eventStart) => this._onRangeBoxChange(eventStart));
-
-        this._roundCoords()
-        this._updateChart(this.currentCoords)
+        this._updateRangePositionForChartPoints()
+        this.onUpdate(this.currentCoords)
     }
 
-    _onRangeBoxChange(eventStart) {
-        this._onRangeChange(eventStart, 'start', true);
-        this._onRangeChange(eventStart, 'end', true);
+    /**
+     * Начало взаимодействие с блоком диапазона
+     * 
+     * @param {Event} eventStart 
+     */
+    _onStartMoveRangeBox(eventStart) {
+        this._onStartMoveMarkerPosition(eventStart, 'start', true);
+        this._onStartMoveMarkerPosition(eventStart, 'end', true);
     }
 
-    _onRangeChange(eventStart, type, isBox) {
-        const move = (eventMove) => this._onRangeMove.call(this, eventMove, type);
+    /**
+     * Начало взаимодействия с маркером диапазона
+     * 
+     * @param {Event} eventStart 
+     * @param {String} type - тип маркера
+     * @param {Boolean} isBox - двигаем диапазон целиком
+     */
+    _onStartMoveMarkerPosition(eventStart, type, isBox) {
+        const _onMoveMarkerMethod = (eventMove) => this._onMarkerMove.call(this, eventMove, type);
 
-        const onRangeUp = () => {
-            document.removeEventListener('pointermove', move);
-            document.removeEventListener('pointerup', onRangeUp);
-            this._roundCoords(isBox);
-            this._updateChart(this.currentCoords)
+        const _onStopMoveMarker = () => {
+            document.removeEventListener('pointermove', _onMoveMarkerMethod);
+            document.removeEventListener('pointerup', _onStopMoveMarker);
+            this._updateRangePositionForChartPoints(isBox);
+            this.onUpdate(this.currentCoords)
         }
 
-        document.addEventListener('pointermove', move);
-        document.addEventListener('pointerup', onRangeUp);
+        document.addEventListener('pointermove', _onMoveMarkerMethod);
+        document.addEventListener('pointerup', _onStopMoveMarker);
 
         this.currentCoords[type] = eventStart.clientX;
     }
 
-    _calculateNewCoords(shift, type) {
-        const current = type === 'start' ? this.rangeStart.offsetWidth : this.rangeEnd.offsetLeft
+    _getMarkerNewPosition(shift, type) {
+        const current = type === 'start' ? this.rangeMarkerStart.offsetWidth : this.rangeMarkerEnd.offsetLeft
         let newCoords = current - shift;
 
-        if (type === 'start' && newCoords > this.rangeEnd.offsetLeft - 20) {
-            newCoords = this.rangeEnd.offsetLeft - 20;
+        if (type === 'start' && newCoords > this.rangeMarkerEnd.offsetLeft - 20) {
+            // не двигаем начальный маркер дальше конечного
+            newCoords = this.rangeMarkerEnd.offsetLeft - 20;
         }
-        if (type === 'end' && newCoords < this.rangeStart.offsetWidth + 20) {
-            newCoords = this.rangeStart.offsetWidth + 20;
+        if (type === 'end' && newCoords < this.rangeMarkerStart.offsetWidth + 20) {
+            // не двигаем конечный маркер дальше начального
+            newCoords = this.rangeMarkerStart.offsetWidth + 20;
         }
 
+        // не выходим за границы графика
         if (newCoords > this.limits.right) {
             newCoords = this.limits.right;
         }
@@ -95,41 +108,52 @@ class RangeController {
         return newCoords;
     }
 
-    _roundCoords(isBox) {
-        const start = isBox ? this.rangeStart.offsetWidth : this.currentCoords.start;
-        const end = isBox ? this.rangeEnd.offsetLeft : this.currentCoords.end;
+    /**
+     * Обноволяем позицию диапазона, привязывая его к якорным точкам графика (шаг)
+     * 
+     * @param {Boolean} isBox - целиком ли диапазон двигаем
+     */
+    _updateRangePositionForChartPoints(isBox) {
+        const start = isBox ? this.rangeMarkerStart.offsetWidth : this.currentCoords.start;
+        const end = isBox ? this.rangeMarkerEnd.offsetLeft : this.currentCoords.end;
 
         this.currentCoords.start = Math.round(start / this.step) * this.step;
         this.currentCoords.end = Math.round(end / this.step) * this.step;
 
-        this.rangeStart.style.right = this.width - this.currentCoords.start  + 'px';
-        this.rangeEnd.style.left = this.currentCoords.end + 'px';
+        this.rangeMarkerStart.style.right = this.width - this.currentCoords.start  + 'px';
+        this.rangeMarkerEnd.style.left = this.currentCoords.end + 'px';
 
-        this.rangeBox.style.left = this.rangeStart.offsetWidth + 'px';
-        this.rangeBox.style.right = this.rangeEnd.offsetWidth + 'px';
+        this.rangeBox.style.left = this.rangeMarkerStart.offsetWidth + 'px';
+        this.rangeBox.style.right = this.rangeMarkerEnd.offsetWidth + 'px';
     }
 
-    _updateCoords(coords, type) {
+    /**
+     * Новые координаты маркера во время движения
+     * 
+     * @param {Number} coords - новые координаты
+     * @param {String} type - тип маркера
+     */
+    _setMarkerPosition(coords, type) {
         if (type === 'start') {
-            this.rangeStart.style.right = this.width - coords  + 'px';
+            this.rangeMarkerStart.style.right = this.width - coords  + 'px';
         }
         if (type === 'end') {
-            this.rangeEnd.style.left = coords + 'px';
+            this.rangeMarkerEnd.style.left = coords + 'px';
         }
 
-        this.rangeBox.style.left = this.rangeStart.offsetWidth + 'px';
-        this.rangeBox.style.right = this.rangeEnd.offsetWidth + 'px';
+        this.rangeBox.style.left = this.rangeMarkerStart.offsetWidth + 'px';
+        this.rangeBox.style.right = this.rangeMarkerEnd.offsetWidth + 'px';
     }
 
-    _onRangeMove(e, type) {
+    _onMarkerMove(e, type) {
         const coord = this.currentCoords[type];
         const shift = coord - e.clientX;
 
-        const newCoords = this._calculateNewCoords(shift, type);
+        const newCoords = this._getMarkerNewPosition(shift, type);
 
         this.currentCoords[type] = e.clientX;
 
-        this._updateCoords(newCoords, type);
+        this._setMarkerPosition(newCoords, type);
     }
 }
 
