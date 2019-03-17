@@ -72,18 +72,11 @@ class SearchPanel {
      * @param {*} range 
      */
     _calcRange(range) {
-        const length = this.data.dates.length + 1;
+        const length = this.data.dates.length - 1;
         const prop = length / this.width;
 
         this.startIndex = Math.round(prop * range.start);
-        this.endIndex = Math.round(prop * range.end);
-
-        // TODO: есть косяки при малом количестве данных
-        if (this.startIndex === this.endIndex && this.endIndex !== length) {
-            this.endIndex++;
-        } else if (this.startIndex === this.endIndex && this.endIndex === length) {
-            this.startIndex--;
-        }
+        this.endIndex = Math.round(prop * range.end) + 1;
 
         this._updateMainChart();
     }
@@ -105,7 +98,7 @@ class SearchPanel {
      */
     _getFilteredData(type) {
         let dates = this.data.dates;
-        let start = this.startIndex - 1;
+        let start = this.startIndex;
         if (Number(start) <= 0) {
             start = 0;
         }

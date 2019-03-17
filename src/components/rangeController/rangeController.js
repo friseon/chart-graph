@@ -21,6 +21,7 @@ class RangeController {
         this.rangeMarkerStart.classList.add('marker-start');
         this.rangeMarkerEnd = range.cloneNode(true);
         this.rangeMarkerEnd.classList.add('marker-end');
+        // callback для графика
         this.onUpdate = params.onUpdate;
 
         rangePanel.appendChild(this.rangeMarkerStart);
@@ -47,7 +48,8 @@ class RangeController {
         this.rangeMarkerEnd.addEventListener('pointerdown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'end'));
         this.rangeBox.addEventListener('pointerdown', (eventStart) => this._onStartMoveRangeBox(eventStart));
 
-        this._updateRangePositionForChartPoints()
+        this._updateRangePositionForChartPoints();
+        // callback для графика
         this.onUpdate(this.currentCoords)
     }
 
@@ -62,7 +64,7 @@ class RangeController {
     }
 
     /**
-     * Начало взаимодействия с маркером диапазона
+     * Взаимодействие с маркером диапазона
      * 
      * @param {Event} eventStart 
      * @param {String} type - тип маркера
@@ -75,6 +77,8 @@ class RangeController {
             document.removeEventListener('pointermove', _onMoveMarkerMethod);
             document.removeEventListener('pointerup', _onStopMoveMarker);
             this._updateRangePositionForChartPoints(isBox);
+
+            // callback для графика
             this.onUpdate(this.currentCoords)
         }
 
