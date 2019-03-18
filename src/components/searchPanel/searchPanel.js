@@ -38,7 +38,7 @@ class SearchPanel {
             container: this.rangePanel.container
         });
 
-        this._onUpdate = params._onUpdate;
+        this._onUpdate = params.onUpdate;
 
         this.data.lines.forEach(item => {
             this._updateFilters(item.name, true);

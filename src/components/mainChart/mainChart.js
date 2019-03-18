@@ -65,13 +65,13 @@ class MainChart extends Chart {
                 this.ctx.textAlign = "end";
             }
 
-            this._startLine(x, y - this.chartParams.padding.bottom, '#f5f5f5', 0.5);
+            // this._startLine(x, y - this.chartParams.padding.bottom, '#f5f5f5', 0.5);
             this.ctx.font = '12px Arial';
             this.ctx.fillStyle = '#f5f5f5';
             this.ctx.fillText(`${constants.monthNames[date.getMonth()]} ${date.getDate()}`,
                 x,
                 y - this.chartParams.padding.bottom + 20);
-            this._drawLine(x, 0);
+            // this._drawLine(x, 0);
             this._endDraw();
 
             this.ctx.textAlign = "start";
