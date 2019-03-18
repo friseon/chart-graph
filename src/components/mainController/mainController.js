@@ -114,9 +114,11 @@ class MainController {
     _onStartSearch() {
         const _onMoveLineMethod = (eventMove) => this._onLineMove.call(this, eventMove);
 
-        const _onStopMoveLine = () => {
+        const _onStopMoveLine = (e) => {
             document.removeEventListener('pointermove', _onMoveLineMethod);
             document.removeEventListener('pointerup', _onStopMoveLine);
+
+            this._onLineMove(e)
         }
 
         document.addEventListener('pointermove', _onMoveLineMethod);
