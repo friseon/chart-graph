@@ -35,7 +35,8 @@ class SearchPanel {
             data: this.data,
             width: params.width,
             height: 100,
-            container: this.rangePanel.container
+            container: this.rangePanel.container,
+            bgColors: params.bgColors
         });
 
         this._onUpdate = params.onUpdate;
