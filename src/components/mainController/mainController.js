@@ -50,7 +50,7 @@ class MainController {
             width: params.width,
             bgColors: this.colors,
             onUpdate: (data) => {
-                this.step = Math.round(this.width / (data.dates.length - 1));
+                this.step = this.width / (data.dates.length - 1);
                 this.max = getMax(data.lines);
                 this._hidePopup();
                 this._popupData(data);
@@ -127,9 +127,9 @@ class MainController {
         const delta = this.step / 2;
 
         const currentValue = this.currentData.find((item) => {
-            return item.x === 0 && e.clientX <= delta ||
-                item.x > delta && e.clientX > (item.x - delta) && e.clientX < (item.x + delta);
+            return e.clientX > (item.x - delta) && e.clientX <= (item.x + delta);
         });
+
 
         if (currentValue) {
             if (this._popupHidden) {
@@ -145,7 +145,8 @@ class MainController {
 
                 document.getElementById(item.name).querySelector('.popup-line-name').textContent = item.name;
                 document.getElementById(item.name).querySelector('.popup-line-value').textContent = item.value;
-            })
+            });
+
             this._setLinePosition(currentValue.x);
         }
     }
@@ -161,6 +162,7 @@ class MainController {
         } else {
             this.popup.style.left = coords + 'px';
         }
+
         this.line.style.left = coords + 'px';
     }
 

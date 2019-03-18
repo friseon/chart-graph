@@ -124,8 +124,8 @@ class RangeController {
         this.currentCoords.start = Math.round(start / this.step) * this.step;
         this.currentCoords.end = Math.round(end / this.step) * this.step;
 
-        if (this.currentCoords.end === this.limits.right) {
-            this.currentCoords.end -= 8;
+        if (this.currentCoords.end >= this.limits.right) {
+            this.currentCoords.end = this.limits.right - 8;
         }
 
         this.rangeMarkerStart.style.right = this.width - this.currentCoords.start  + 'px';
