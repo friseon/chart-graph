@@ -15,40 +15,58 @@ class MainController {
     constructor(params) {
         // TODO: в конфиг всё перенести
         this.colors = {
-            day: '#f5f5f5',
-            night: '#242f3e'
+            main: {
+                day: '#f5f5f5',
+                night: '#242f3e'
+            },
+            line: {
+                day: '',
+                night: '#344658'
+            },
+            text: {
+                day: '',
+                night: '#fff'
+            }
         };
+
+        // TODO: подумать на эти...
+        this._id = Date.now();
+
+        this.mainContainer = document.createElement('div');
+        this.mainContainer.classList.add('chart-container');
+        this.mainContainer.style.width = params.width + 'px';
+        this.mainContainer.style.backgroundColor = this.colors.main.night;
+        this.mainContainer.style.color = this.colors.text.night;
 
         this.mainPanel = document.createElement('div');
         this.mainPanel.classList.add('main-panel');
-        this.mainPanel.style.width = params.width + 'px';
 
         this._createPopup();
 
         this.data = prepareData(params.data);
-        this.chartContainer = document.querySelector('.chart');
 
         this.mainPanel.addEventListener('pointerdown', this._onStartSearch.bind(this));
 
         this.mainChart = new MainChart({
-            idCanvas: "main-chart",
+            idCanvas: 'main-chart',
             data: this.data,
             container: this.mainPanel,
             onUpdateData: this.onUpdateData,
-            bgColors: this.colors
+            bgColors: this.colors.main.night,
+            lineColor: this.colors.line.night
         });
 
         // TODO: в конфиг всё перенести
         this.width = this.mainChart.width;
         this.height = this.mainChart.height;
 
-        this.chartContainer.appendChild(this.mainPanel);
+        this.mainContainer.appendChild(this.mainPanel);
 
         this.searchPanel = new SearchPanel({
             data: this.data,
-            container: this.chartContainer,
+            container: this.mainContainer,
             width: params.width,
-            bgColors: this.colors,
+            bgColors: this.colors.main,
             onUpdate: (data) => {
                 this.step = this.width / (data.dates.length - 1);
                 this.max = getMax(data.lines);
@@ -57,6 +75,8 @@ class MainController {
                 this.mainChart.redraw(data);
             }
         });
+
+        document.querySelector('.chart').appendChild(this.mainContainer);
     }
 
     init() {
@@ -76,11 +96,11 @@ class MainController {
         data.lines.forEach(line => {
             const item = this.popupLineInfo.cloneNode(true);
             item.style.color = line.color;
-            item.id = line.name;
+            item.id = line.name + this._id;
 
             const marker = this.chartMarker.cloneNode(true);
             marker.style.borderColor = line.color;
-            marker.id = 'marker-' + line.name;
+            marker.id = 'marker-' + line.name + this._id;
 
             this.mainPanel.appendChild(marker);
             this.popup.querySelector('.popup-info').appendChild(item);
@@ -145,36 +165,50 @@ class MainController {
             currentValue.values.forEach(item => {
                 this._setMarkerPosition(item.name, currentValue.x, item.y);
 
-                document.getElementById(item.name).querySelector('.popup-line-name').textContent = item.name;
-                document.getElementById(item.name).querySelector('.popup-line-value').textContent = item.value;
+                document.getElementById(item.name + this._id).querySelector('.popup-line-name').textContent = item.name;
+                document.getElementById(item.name + this._id).querySelector('.popup-line-value').textContent = item.value;
             });
 
-            this._setLinePosition(currentValue.x);
+            this._setLinePosition(currentValue.x, e.offsetY);
         }
     }
 
     _setMarkerPosition(name, x, y) {
-        document.getElementById('marker-' + name).style.left = x + 'px';
-        document.getElementById('marker-' + name).style.top = y + 'px'
+        document.getElementById('marker-' + name + this._id).style.left = x + 'px';
+        document.getElementById('marker-' + name + this._id).style.top = y + 'px'
     }
 
-    _setLinePosition(coords) {
-        if (coords + this.popup.offsetWidth >= this.width) {
-            this.popup.style.left = coords - this.popup.offsetWidth - 18 + 'px';
+    _setLinePosition(x, y) {
+        if (x + this.popup.offsetWidth >= this.width) {
+            this.popup.style.left = x - this.popup.offsetWidth - 18 + 'px';
         } else {
-            this.popup.style.left = coords + 'px';
+            this.popup.style.left = x + 'px';
         }
 
-        this.line.style.left = coords + 'px';
+        if (y > this.height) {
+            y = this.height;
+        }
+
+        if (y < 0) {
+            y = 0;
+        }
+
+        this.popup.style.top = y + 'px';
+
+        this.line.style.left = x + 'px';
     }
 
     _createPopup() {
         // TODO: привести к номальному виду popup
         this.line = document.createElement('div');
         this.line.classList.add('search-line');
+        this.line.style.backgroundColor = this.colors.line.night;
+        // TODO: config
+        this.line.style.bottom = 55 + 'px';
 
         this.popup = document.createElement('div');
         this.popup.classList.add('popup');
+        this.popup.style.backgroundColor = this.colors.main.night;
 
         const popupDate = document.createElement('h3');
         popupDate.classList.add('popup-date');
@@ -187,7 +221,7 @@ class MainController {
 
         this.chartMarker = document.createElement('div');
         this.chartMarker.classList.add('chart-marker');
-        this.chartMarker.style.backgroundColor = this.colors.night;
+        this.chartMarker.style.backgroundColor = this.colors.main.night;
 
         this.popupLineInfo = document.createElement('div');
         this.popupLineInfo.classList.add('popup-line-info');

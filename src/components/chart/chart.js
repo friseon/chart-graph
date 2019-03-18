@@ -15,12 +15,7 @@ class Chart {
 
         this.ctx = canvas.getContext('2d');
 
-        this.colors = {
-            bg: params.bgColors || {
-                day: '#f5f5f5',
-                night: '#333'
-            }
-        };
+        this.lineColor = params.lineColor;
 
         this._prepareChartParams(params.data);
     }
@@ -45,7 +40,7 @@ class Chart {
      * Отрисовка графика
      */
     draw() {
-        this._drawBackground();
+        // this._drawBackground();
         this._drawCharts();
     }
 
@@ -78,23 +73,17 @@ class Chart {
                     this._startLine(0, preparedValue, line.color);
                 } else {
                     this._drawLine(this.chartParams.step * index, preparedValue);
-
-                    if (index === arr.length - 1) {
-                        this._endDraw();
-                    }
                 }
             })
         });
     }
 
     /**
-     * Подложка для графика
+     * Подложка для графика (TODO: не нужна...)
      */
     _drawBackground() {
-        this._startDraw();
-        this.ctx.fillStyle = this.colors.bg.night;
+        this.ctx.fillStyle = this.colors.bg;
         this.ctx.fillRect(0, 0, this.width, this.height);
-        this._endDraw();
     }
 
     /**
@@ -106,7 +95,7 @@ class Chart {
      * @param {Number} lineWidth 
      */
     _startLine(startX, startY, color, lineWidth = 1) {
-        this._startDraw();
+        this.ctx.lineJoin = this.ctx.lineCap = 'round';
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = lineWidth;
         this.ctx.beginPath();
@@ -122,20 +111,6 @@ class Chart {
     _drawLine(endX, endY) {
         this.ctx.lineTo(endX, endY);
         this.ctx.stroke();
-    }
-
-    /**
-     * Начало рисования самостоятельной части
-     */
-    _startDraw() {
-        this.ctx.save();
-    }
-
-    /**
-     * Окончания рисования самостоятельной части
-     */
-    _endDraw() {
-        this.ctx.restore();
     }
 
     /**
