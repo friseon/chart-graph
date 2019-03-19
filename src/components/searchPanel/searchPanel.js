@@ -34,9 +34,8 @@ class SearchPanel {
             idCanvas: 'search-chart',
             data: this.data,
             width: params.width,
-            height: 100,
-            container: this.rangePanel.container,
-            bgColors: params.bgColors
+            height: params.rangeHeight,
+            container: this.rangePanel.container
         });
 
         this._onUpdate = params.onUpdate;

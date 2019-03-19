@@ -1,23 +1,11 @@
 import './lineFilter.scss';
 
+import {
+    chartColors
+} from '../../config/config';
+
 class LineFilter {
     constructor(params) {
-        // TODO: в конфиг всё перенести
-        this.colors = {
-            main: {
-                day: '#f5f5f5',
-                night: '#242f3e'
-            },
-            line: {
-                day: '',
-                night: '#344658'
-            },
-            text: {
-                day: '',
-                night: '#fff'
-            }
-        };
-
         const filter = document.createElement('input');
         const filterLabel = document.createElement('label');
         const filterMarker = document.createElement('span');
@@ -43,8 +31,8 @@ class LineFilter {
         filterLabel.appendChild(filterMarker);
         filterLabel.appendChild(filterTitle);
         filterLabel.classList.add('line-filter');
-        filterLabel.style.borderColor = this.colors.line.night;
-        filterLabel.style.color = this.colors.text.night;
+        filterLabel.style.borderColor = chartColors.line.night;
+        filterLabel.style.color = chartColors.text.night;
 
         filterLabel.addEventListener('change', (e) => {
             filterMarker.style.backgroundColor = e.target.checked ? params.color : 'transparent';

@@ -16,8 +16,11 @@ class Chart {
         this.ctx = canvas.getContext('2d');
 
         this.lineColor = params.lineColor;
+        this.chartParams = {
+            paddings: params.paddings
+        }
 
-        this._prepareChartParams(params.data);
+        this._prepareChartData(params.data);
     }
 
     /**
@@ -25,11 +28,11 @@ class Chart {
      * 
      * @param {Array} data – сырые данные
      */
-    _prepareChartParams(data) {
+    _prepareChartData(data) {
         const max = getMax(data.lines);
 
         this.lines = data.lines;
-        this.chartParams = {
+        this.chartData = {
             dates: data.dates,
             max,
             step: this.width / (data.dates.length - 1)
@@ -45,7 +48,7 @@ class Chart {
     }
 
     redraw(data) {
-        this._prepareChartParams(data);
+        this._prepareChartData(data);
         this.clear();
         this.draw();
     }
@@ -55,10 +58,10 @@ class Chart {
      * 
      * @param {Number} val – значение в данных
      */
-    _prepareValue(val) {
-        const p = this.height - this.chartParams.padding.top - this.chartParams.padding.bottom;
+    prepareValue(val) {
+        const p = this.height - this.chartParams.paddings.top - this.chartParams.paddings.bottom;
 
-        return this.height - p / this.chartParams.max * val - this.chartParams.padding.bottom;
+        return this.height - p / this.chartData.max * val - this.chartParams.paddings.bottom;
     }
 
     /**
@@ -67,12 +70,12 @@ class Chart {
     _drawCharts() {
         this.lines.forEach(line => {
             line.data.forEach((y, index, arr) => {
-                const preparedValue = this._prepareValue(y);
+                const preparedValue = this.prepareValue(y);
 
                 if (index === 0) {
                     this._startLine(0, preparedValue, line.color);
                 } else {
-                    this._drawLine(this.chartParams.step * index, preparedValue);
+                    this._drawLine(this.chartData.step * index, preparedValue);
                 }
             })
         });
