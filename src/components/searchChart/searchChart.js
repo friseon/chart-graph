@@ -1,7 +1,7 @@
 import Chart from '../chart/chart.js';
 
 class SearchChart extends Chart {
-    prepareValue(val) {
+    getYFromPointValue(val) {
         return this.height - this.height / this.chartData.max * val;
     }
 }

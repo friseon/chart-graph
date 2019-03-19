@@ -30,20 +30,33 @@ class Chart {
      */
     _prepareChartData(data) {
         const max = getMax(data.lines);
+        const step = this.width / (data.dates.length - 1);
 
-        this.lines = data.lines;
         this.chartData = {
             dates: data.dates,
             max,
-            step: this.width / (data.dates.length - 1)
+            step
         };
+        this.lines = this._getCoords(data.lines, step);
+    }
+
+    _getCoords(lines, step) {
+        return lines.map(line => {
+            line.coords = line.data.map((point, index) => {
+                return {
+                    x: step * index,
+                    y: this.getYFromPointValue(point)
+                }
+            });
+
+            return line;
+        });
     }
 
     /**
      * Отрисовка графика
      */
     draw() {
-        // this._drawBackground();
         this._drawCharts();
     }
 
@@ -58,7 +71,7 @@ class Chart {
      * 
      * @param {Number} val – значение в данных
      */
-    prepareValue(val) {
+    getYFromPointValue(val) {
         const p = this.height - this.chartParams.paddings.top - this.chartParams.paddings.bottom;
 
         return this.height - p / this.chartData.max * val - this.chartParams.paddings.bottom;
@@ -69,13 +82,11 @@ class Chart {
      */
     _drawCharts() {
         this.lines.forEach(line => {
-            line.data.forEach((y, index, arr) => {
-                const preparedValue = this.prepareValue(y);
-
-                if (index === 0) {
-                    this._startLine(0, preparedValue, line.color);
+            line.coords.forEach(item => {
+                if (item.x === 0) {
+                    this._startLine(item.x, item.y, line.color);
                 } else {
-                    this._drawLine(this.chartData.step * index, preparedValue);
+                    this._drawLine(item.x, item.y);
                 }
             })
         });

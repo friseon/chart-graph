@@ -41,7 +41,7 @@ class MainChart extends Chart {
         }
         
         _dateDeviders.forEach((devider, index) => {
-            const date = new Date(devider);
+            const date = devider.short;
             let x = index * _dateStep;
             const y = this.height;
 
@@ -58,7 +58,7 @@ class MainChart extends Chart {
 
             this.ctx.font = '12px Arial';
             this.ctx.fillStyle = '#f5f5f5';
-            this.ctx.fillText(`${constants.monthNames[date.getMonth()]} ${date.getDate()}`,
+            this.ctx.fillText(date,
                 x,
                 y - this.chartParams.paddings.bottom + 20);
 
@@ -71,7 +71,7 @@ class MainChart extends Chart {
      */
     _drawDividers() {
         this.chartData.deviders.forEach(devider => {
-            const preparedValue = this.prepareValue(devider);
+            const preparedValue = this.getYFromPointValue(devider);
 
             this._startLine(0, preparedValue, this.lineColor, 1);
             this.ctx.font = '12px Arial';

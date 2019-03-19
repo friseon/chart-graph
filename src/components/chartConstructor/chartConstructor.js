@@ -1,7 +1,6 @@
 import {
     prepareData,
-    constants,
-    getMax
+    constants
 } from '../../utils';
 
 import {
@@ -60,7 +59,6 @@ class ChartConstructor {
             width: params.width,
             rangeHeight: 100,
             onUpdate: (data) => {
-                this.step = this.width / (data.dates.length - 1);
                 this._hidePopup();
                 this.mainChart.redraw(data);
                 this._prepareDetaisData(data);
@@ -80,7 +78,7 @@ class ChartConstructor {
             return {
                 date,
                 values: [],
-                x: this.step * index
+                x: this.mainChart.chartData.step * index
             }
         });
 
@@ -100,7 +98,7 @@ class ChartConstructor {
                 const _temp = {
                     name: line.name,
                     value: value,
-                    y: this.mainChart.prepareValue(value)
+                    y: this.mainChart.getYFromPointValue(value)
                 };
 
                 _items[index].values.push(_temp);
@@ -125,9 +123,10 @@ class ChartConstructor {
     }
 
     _onLineMove(e) {
-        const delta = this.step / 2;
+        const delta = this.mainChart.chartData.step / 2;
 
         const currentValue = this.currentData.find((item) => {
+            
             return e.clientX > (item.x - delta) && e.clientX <= (item.x + delta);
         });
 
@@ -137,9 +136,8 @@ class ChartConstructor {
                 this._showPopup();
             }
 
-            const date = new Date(currentValue.date);
-            const formattedDate = `${constants.dayNames[date.getDay()]}, ${constants.monthNames[date.getMonth()]} ${date.getDate()}`;
-            this.detailsPopup.querySelector('.details-popup__date').textContent = formattedDate;
+            const date = currentValue.date.long;
+            this.detailsPopup.querySelector('.details-popup__date').textContent = date;
 
             currentValue.values.forEach(item => {
                 this._setMarkerPosition(item.name, currentValue.x, item.y);
