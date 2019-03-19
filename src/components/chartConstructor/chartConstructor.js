@@ -74,11 +74,10 @@ class ChartConstructor {
 
     _prepareDetaisData(data) {
         // предварительные данные, которые нужны для отображения popup
-        const _items = data.dates.map((date, index) => {
+        const _items = data.dates.map(date => {
             return {
                 date,
-                values: [],
-                x: this.mainChart.chartData.step * index
+                values: []
             }
         });
 
@@ -98,12 +97,13 @@ class ChartConstructor {
                 const _temp = {
                     name: line.name,
                     value: value,
-                    y: this.mainChart.getYFromPointValue(value)
+                    y: line.coords[index].y
                 };
 
+                _items[index].x = line.coords[index].x;
                 _items[index].values.push(_temp);
             });
-        })
+        });
 
         this.currentData = _items;
     }
@@ -126,7 +126,6 @@ class ChartConstructor {
         const delta = this.mainChart.chartData.step / 2;
 
         const currentValue = this.currentData.find((item) => {
-            
             return e.clientX > (item.x - delta) && e.clientX <= (item.x + delta);
         });
 
