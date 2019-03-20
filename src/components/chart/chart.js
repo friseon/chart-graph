@@ -21,6 +21,8 @@ class Chart {
         }
 
         this._prepareChartData(params.data);
+
+        this._index = 0;
     }
 
     /**
@@ -61,9 +63,99 @@ class Chart {
     }
 
     redraw(data) {
-        this._prepareChartData(data);
+        // this._prepareChartData(data);
         this.clear();
         this.draw();
+    }
+
+    redraw2(params, isFromSearch) {
+        this._index = this._index + 1;
+        if (!this._lastParams) {
+            this._lastParams = {...params};
+        }
+        this._prepareChartData2(params);
+        this.clear();
+        this.draw();
+        if (isFromSearch) {
+            this._lastParams = {...params};
+        }
+    }
+
+    _prepareChartData2(params) {
+        this._isStop = true;
+
+        const lines = this._lines ? this._lines : this.lines;
+
+        this._lines = lines
+            .map((line, index) => {
+                const currentLine = {...line};
+
+                currentLine.coords = currentLine.coords.map((item, index2) => {
+                    const currentItem = {...item};
+
+                    if (!params.filters[currentLine.name]) {
+                        if (currentItem.y > -2) {
+                            this._isStop = false;
+
+                            const deltaY = currentItem.y / 10;
+
+                            return {
+                                ...currentItem,
+                                y: Math.abs(deltaY) < .5 ? -2 : currentItem.y - deltaY
+                            }
+                        }
+                    } else {
+                        if (index2 < params.start && currentItem.y !== this.lines[index].coords[params.start].y) {
+                            this._isStop = false;
+
+                            const deltaY = (this.lines[index].coords[params.start].y - currentItem.y) / 10;
+                            return {
+                                ...currentItem,
+                                y: Math.abs(deltaY) < 1 ? this.lines[index].coords[params.start].y : currentItem.y + deltaY,
+                                // x: 0
+                            };
+                        } else if (index2 >= params.end && currentItem.y !== this.lines[index].coords[params.end].y) {
+                            this._isStop = false;
+
+                            const deltaY = (this.lines[index].coords[params.end].y - currentItem.y) / 10;
+                            return {
+                                ...currentItem,
+                                y: Math.abs(deltaY) < 3 ? this.lines[index].coords[params.end].y : currentItem.y + deltaY,
+                                // x: this.width
+                            };
+                        } else if (index2 >= params.start && index2 < params.end &&
+                            (currentItem.x !== this.lines[index].coords[index2].x || currentItem.y !== this.lines[index].coords[index2].y)) {
+                            this._isStop = false;
+                            console.log('??')
+                            const deltaX = (this.lines[index].coords[index2].x - currentItem.x) / 10;
+                            const deltaY = (this.lines[index].coords[index2].y - currentItem.y) / 10;
+    
+                            return {
+                                ...currentItem,
+                                y: Math.abs(deltaY) < 3 ? this.lines[index].coords[index2].y : currentItem.y + deltaY,
+                                x: Math.abs(deltaX) < 3 ? this.lines[index].coords[index2].x : currentItem.x + deltaX
+                            };
+                        }
+                    }
+
+                    return item;
+                })
+
+                return currentLine;
+            })
+
+        if (!this._isStop && this._index < 500) {
+            window.requestAnimationFrame(() => this.redraw2(params));
+        }
+        // const max = getMax(data.lines);
+        // const step = this.width / (data.dates.length - 1);
+
+        // this.chartData = {
+        //     dates: data.dates,
+        //     max,
+        //     step
+        // };
+        // this.lines = this._getCoords(data.lines, step);
     }
 
     /**
@@ -81,7 +173,9 @@ class Chart {
      * Отрисовка линий графика
      */
     _drawCharts() {
-        this.lines.forEach(line => {
+        const lines = this._lines || this.lines;
+        console.log('_drawCharts', lines)
+        lines.forEach(line => {
             line.coords.forEach(item => {
                 if (item.x === 0) {
                     this._startLine(item.x, item.y, line.color);

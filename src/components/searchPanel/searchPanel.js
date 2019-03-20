@@ -127,7 +127,11 @@ class SearchPanel {
                 })
         };
 
-        return filteredData;
+        return {
+            filters: this._state.filters,
+            start,
+            end: this.endIndex - 1
+        };
     }
 
     _updateSearchChart() {

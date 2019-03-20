@@ -60,8 +60,8 @@ class ChartConstructor {
             rangeHeight: 100,
             onUpdate: (data) => {
                 this._hidePopup();
-                this.mainChart.redraw(data);
-                this._prepareDetaisData(data);
+                this.mainChart.redraw2(data, true);
+                // this._prepareDetaisData(data);
             }
         });
 
