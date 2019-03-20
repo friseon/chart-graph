@@ -82,7 +82,46 @@ class Chart {
     }
 
     _prepareChartData2(params) {
+        // console.log(params)
         this._isStop = true;
+        const max = getMax(this.lines);
+        const step = this.width / (params.end - params.start);
+
+        this.chartData.max = max;
+        this.chartData.step = step;
+
+        this._newCoords = this.lines.map(line => {
+            const currentLine = {...line};
+
+            currentLine.coords = line.data.map((point, index) => {
+                if (index > params.end) {
+                    return {
+                        x: this.width + 1,
+                        y: 0
+                    }
+                }
+                if (index < params.start) {
+                    return {
+                        x: 0,
+                        y: 0
+                    }
+                }
+
+                if (index === 0 && index === params.start) {
+                    return {
+                        x: 0,
+                        y: this.getYFromPointValue(point)
+                    }
+                }
+
+                return {
+                    x: step * (index - params.start) + 1,
+                    y: this.getYFromPointValue(point)
+                }
+            });
+
+            return currentLine;
+        });
 
         const lines = this._lines ? this._lines : this.lines;
 
@@ -105,35 +144,37 @@ class Chart {
                             }
                         }
                     } else {
-                        if (index2 < params.start && currentItem.y !== this.lines[index].coords[params.start].y) {
+                        if (index2 < params.start && currentItem.y !== this._newCoords[index].coords[params.start].y) {
                             this._isStop = false;
 
-                            const deltaY = (this.lines[index].coords[params.start].y - currentItem.y) / 10;
+                            const deltaY = (this._newCoords[index].coords[params.start].y - currentItem.y) / 10;
+
                             return {
                                 ...currentItem,
-                                y: Math.abs(deltaY) < 1 ? this.lines[index].coords[params.start].y : currentItem.y + deltaY,
-                                // x: 0
+                                y: Math.abs(deltaY) < 1 ? this._newCoords[index].coords[params.start].y : currentItem.y + deltaY,
+                                x: 0
                             };
-                        } else if (index2 >= params.end && currentItem.y !== this.lines[index].coords[params.end].y) {
+                        } else if (index2 >= params.end && currentItem.y !== this._newCoords[index].coords[params.end].y) {
                             this._isStop = false;
 
-                            const deltaY = (this.lines[index].coords[params.end].y - currentItem.y) / 10;
+                            const deltaY = (this._newCoords[index].coords[params.end].y - currentItem.y) / 10;
+
                             return {
                                 ...currentItem,
-                                y: Math.abs(deltaY) < 3 ? this.lines[index].coords[params.end].y : currentItem.y + deltaY,
-                                // x: this.width
+                                y: Math.abs(deltaY) < 3 ? this._newCoords[index].coords[params.end].y : currentItem.y + deltaY,
+                                x: this.width
                             };
-                        } else if (index2 >= params.start && index2 < params.end &&
-                            (currentItem.x !== this.lines[index].coords[index2].x || currentItem.y !== this.lines[index].coords[index2].y)) {
+                        } else if (index2 >= params.start && index2 <= params.end &&
+                            (currentItem.x !== this._newCoords[index].coords[index2].x || currentItem.y !== this._newCoords[index].coords[index2].y)) {
                             this._isStop = false;
-                            console.log('??')
-                            const deltaX = (this.lines[index].coords[index2].x - currentItem.x) / 10;
-                            const deltaY = (this.lines[index].coords[index2].y - currentItem.y) / 10;
+
+                            const deltaX = (this._newCoords[index].coords[index2].x - currentItem.x) / 10;
+                            const deltaY = (this._newCoords[index].coords[index2].y - currentItem.y) / 10;
     
                             return {
                                 ...currentItem,
-                                y: Math.abs(deltaY) < 3 ? this.lines[index].coords[index2].y : currentItem.y + deltaY,
-                                x: Math.abs(deltaX) < 3 ? this.lines[index].coords[index2].x : currentItem.x + deltaX
+                                y: Math.abs(deltaY) < 3 ? this._newCoords[index].coords[index2].y : currentItem.y + deltaY,
+                                x: Math.abs(deltaX) < 3 ? this._newCoords[index].coords[index2].x : currentItem.x + deltaX
                             };
                         }
                     }
@@ -144,7 +185,7 @@ class Chart {
                 return currentLine;
             })
 
-        if (!this._isStop && this._index < 500) {
+        if (!this._isStop && this._index < 1000) {
             window.requestAnimationFrame(() => this.redraw2(params));
         }
         // const max = getMax(data.lines);
@@ -174,7 +215,7 @@ class Chart {
      */
     _drawCharts() {
         const lines = this._lines || this.lines;
-        console.log('_drawCharts', lines)
+
         lines.forEach(line => {
             line.coords.forEach(item => {
                 if (item.x === 0) {

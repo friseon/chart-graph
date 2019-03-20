@@ -71,7 +71,10 @@ class RangeController {
      * @param {Boolean} isBox - двигаем диапазон целиком
      */
     _onStartMoveMarkerPosition(eventStart, type, isBox) {
-        const _onMoveMarkerMethod = (eventMove) => this._onMarkerMove.call(this, eventMove, type);
+        const _onMoveMarkerMethod = (eventMove) => {
+            this.onUpdate(this.currentCoords);
+            this._onMarkerMove.call(this, eventMove, type)
+        };
 
         const _onStopMoveMarker = () => {
             document.removeEventListener('pointermove', _onMoveMarkerMethod);
