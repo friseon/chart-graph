@@ -1,6 +1,5 @@
 import {
-    prepareData,
-    constants
+    prepareData
 } from '../../utils';
 
 import {
@@ -60,7 +59,7 @@ class ChartConstructor {
             rangeHeight: 100,
             onUpdate: (data) => {
                 this._hidePopup();
-                this.mainChart.redraw2(data, true);
+                this.mainChart.updateChart(data, true);
                 // this._prepareDetaisData(data);
             }
         });

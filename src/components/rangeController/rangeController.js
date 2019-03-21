@@ -1,5 +1,9 @@
 import './rangeController.scss';
 
+import {
+    debounce
+} from './../../utils';
+
 class RangeController {
     constructor(params) {
         const rangePanel = document.createElement('div');
@@ -72,7 +76,6 @@ class RangeController {
      */
     _onStartMoveMarkerPosition(eventStart, type, isBox) {
         const _onMoveMarkerMethod = (eventMove) => {
-            this.onUpdate(this.currentCoords);
             this._onMarkerMove.call(this, eventMove, type)
         };
 
@@ -154,6 +157,11 @@ class RangeController {
 
         this.rangeBox.style.left = this.rangeMarkerStart.offsetWidth + 'px';
         this.rangeBox.style.right = this.rangeMarkerEnd.offsetWidth + 'px';
+
+        debounce(() => this.onUpdate({
+            start: this.rangeMarkerStart.offsetWidth,
+            end: this.rangeMarkerEnd.offsetLeft
+        }), 100)()
     }
 
     _onMarkerMove(e, type) {
@@ -162,10 +170,11 @@ class RangeController {
 
         const newCoords = this._getMarkerNewPosition(shift, type);
 
-        this.currentCoords[type] = e.clientX;
-
         this._setMarkerPosition(newCoords, type);
+
+        this.currentCoords[type] = e.clientX;
     }
 }
+
 
 export default RangeController;
