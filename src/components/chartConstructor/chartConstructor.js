@@ -57,10 +57,13 @@ class ChartConstructor {
             container: this.container,
             width: params.width,
             rangeHeight: 100,
-            onUpdate: (data) => {
+            onUpdate: (params) => {
                 this._hidePopup();
-                this.mainChart.updateChart(data, true);
-                // this._prepareDetaisData(data);
+                this.mainChart.updateCurrentCoords(params, true);
+                this._prepareDetaisData({
+                    dates: this.mainChart.currentChartData.dates,
+                    lines: this.mainChart.currentChartData.cuttedData
+                });
             }
         });
 
@@ -122,7 +125,7 @@ class ChartConstructor {
     }
 
     _onLineMove(e) {
-        const delta = this.mainChart.chartData.step / 2;
+        const delta = this.mainChart.currentChartData.step / 2;
 
         const currentValue = this.currentData.find((item) => {
             return e.clientX > (item.x - delta) && e.clientX <= (item.x + delta);

@@ -1,5 +1,6 @@
 import {
-    getMax
+    getMax,
+    getMin
 } from './../../utils';
 
 class Chart {
@@ -24,7 +25,7 @@ class Chart {
             this._bottom = this.height - params.paddings.bottom || 0;
         }
 
-        this._prepareChartData(params.data);
+        this._setOriginalChartData(params.data);
 
         this._index = 0;
     }
@@ -34,19 +35,21 @@ class Chart {
      * 
      * @param {Array} data – сырые данные
      */
-    _prepareChartData(data) {
+    _setOriginalChartData(data) {
         const max = getMax(data.lines);
         const step = this.width / (data.dates.length - 1);
 
-        this.chartData = {
+        this.originalChartData = {
             dates: data.dates,
             max,
             step
         };
-        this.lines = this._getCoords(data.lines, step);
+        this.currentChartData = {...this.originalChartData};
+
+        this.lines = this._setCoords(data.lines, step);
     }
 
-    _getCoords(lines, step) {
+    _setCoords(lines, step) {
         return lines.map(line => {
             line.coords = line.data.map((point, index) => {
                 return {
@@ -66,45 +69,60 @@ class Chart {
         this._drawCharts();
     }
 
-    redraw(data) {
-        // this._prepareChartData(data);
-        this.clear();
-        this.draw();
+    _getUpdatedFilter(params) {
+        let updatedFilter;
+
+        if (!this.currentChartData || !this.currentChartData.filters) {
+            return;
+        }
+
+        Object.keys(params.filters).forEach(filterName => {
+            if (this.currentChartData.filters[filterName] !== params.filters[filterName]) {
+                updatedFilter = filterName;
+                return
+            }
+        });;
+
+        return updatedFilter
     }
 
-    updateChart(params) {
+    updateCurrentCoords(params) {
         this._isStop = true;
         cancelAnimationFrame(this._reqId);
 
-        this._lastParams = {...params};
-
-        const max = getMax(this.lines);
+        const max = getMax(this.lines, params);
+        const min = getMin(this.lines, params); // доработай минимальное значение
         const step = this.width / (params.end - params.start);
+        const dates = this.originalChartData.dates.slice(params.start, params.end + 1);
 
-        this.chartData.max = max;
-        this.chartData.step = step;
+        this.currentChartData = {
+            ...this.originalChartData,
+            dates,
+            max,
+            min,
+            step,
+            start: params.start,
+            end: params.end,
+            updatedFilter: this._getUpdatedFilter(params),
+            filters: {...params.filters}
+        };
 
-        this.newLines = this.lines.map(line => {
+        this.goalData = this.lines.map(line => {
             const currentLine = {...line};
+            const endPointValue = this.getYFromPointValue(line.data[params.end]);
+            const startPointValue = this.getYFromPointValue(line.data[params.start]);
 
             currentLine.coords = line.data.map((point, index) => {
                 if (index > params.end) {
                     return {
                         x: this.width,
-                        y: this._bottom
+                        y: endPointValue
                     }
                 }
                 if (index < params.start) {
                     return {
                         x: 0,
-                        y: this._bottom
-                    }
-                }
-
-                if (index === 0 && index === params.start) {
-                    return {
-                        x: 0,
-                        y: this.getYFromPointValue(point)
+                        y: startPointValue
                     }
                 }
 
@@ -117,31 +135,51 @@ class Chart {
             return currentLine;
         });
 
-        this.redraw2(this._lastParams);
+        this.currentChartData.cuttedData = this.goalData
+            .map(line => {
+                return {
+                    ...line,
+                    coords: line.coords.slice(params.start, params.end + 1),
+                    data: line.data.slice(params.start, params.end + 1)
+                }
+            })
+            .filter(line => params.filters[line.name]);
+
+        this.redraw(params);
     }
 
-    redraw2(params) {
-        this._index = this._index + 1;
-        this._prepareChartData2(params);
+    redraw(params) {
+        this._updateCurrentCoords(params);
         this.clear();
         this.draw();
 
         if (!this._isStop) {
-            this._reqId = window.requestAnimationFrame(() => this.redraw2(params));
+            this._reqId = window.requestAnimationFrame(() => this.redraw(params));
         }
     }
 
-    _prepareChartData2(params) {
+    _updateCurrentCoords(params) {
         this._isStop = true;
 
-        const lines = this._lines ? this._lines : this.lines;
-
-        this._lines = lines
+        this.lines = this.lines
             .map((line, index) => {
                 const currentLine = {...line};
-                const newLine = this.newLines[index];
-                const newStartCoords = newLine.coords[params.start];
-                const newEndCoords = newLine.coords[params.end];
+                const newLine = this.goalData[index];
+
+                if (!params.filters[currentLine.name]) {
+                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity > 1) {
+                        currentLine.opacity = .4;
+                    }
+
+                    currentLine.opacity = currentLine.opacity > 0 ? +currentLine.opacity.toFixed(2) - .05 : 0;
+                } else if (this.currentChartData.updatedFilter === currentLine.name) {
+                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity > 1) {
+                        currentLine.opacity = .4;
+                    }
+
+                    currentLine.opacity = currentLine.opacity <= 1 ? +currentLine.opacity.toFixed(2) + .05 : 1;
+                }
+
 
                 currentLine.coords = currentLine.coords.map((item, index2) => {
                     const currentCoords = {...item};
@@ -154,60 +192,26 @@ class Chart {
                     const currentX = +currentCoords.x.toFixed(1);
 
                     if (!params.filters[currentLine.name]) {
-                        if (currentY < this._bottom) {
+                        if (currentY > -10) {
                             this._isStop = false;
 
-                            const deltaY = currentY > 0 ? (this._bottom - currentY) / 10 : this._bottom / 10;
-
-                            currentLine.opacity = (this._bottom - currentY) / this._bottom;
+                            const deltaY = Math.max(this._bottom / 20, currentY / 10);
 
                             return {
                                 ...currentCoords,
-                                y: Math.abs(deltaY) < .3 && currentY < this._bottom ? this._bottom + 2 : currentY + deltaY
+                                y: currentY < -10 ? 0 : currentY - deltaY
                             }
                         }
-                    } else {
-                        if (index2 < params.start && currentY !== newStartCoords.y) {
-                            this._isStop = false;
+                    } else if (currentX !== newCoords.x || currentY !== newCoords.y) {
+                        this._isStop = false;
 
-                            const deltaY = (newStartCoords.y - currentY) / 10;
+                        const deltaX = (newCoords.x - currentX) / 10;
+                        const deltaY = (newCoords.y - currentY) / 10;
 
-                            return {
-                                y: Math.abs(deltaY) < .3 ? newStartCoords.y : currentY + deltaY,
-                                x: 0
-                            };
-                        } else if (index2 > params.end && currentY !== newEndCoords.y) {
-                            this._isStop = false;
-
-                            let deltaY = (newEndCoords.y - currentY) / 10;
-
-                            return {
-                                y: Math.abs(deltaY) < .3 ? newEndCoords.y : currentY + deltaY,
-                                x: this.width
-                            };
-                        } else if (index2 >= params.start && index2 <= params.end &&
-                            (currentX !== newCoords.x || currentY !== newCoords.y)) {
-                            this._isStop = false;
-                            const _dX = newCoords.x - currentX;
-                            const _dY = newCoords.y - currentY;
-
-                            let deltaX = currentX !== newCoords.x ? Math.round(_dX / 10) : 0;
-                            let deltaY = currentY !== newCoords.y ? Math.round(_dY / 10) : 0;
-
-                            deltaX = _dX > 0 ? Math.max(1, deltaX) : Math.min(-1, deltaX);
-                            deltaY = _dY > 0 ? Math.max(1, deltaY) : Math.min(-1, deltaY);
-
-                            if (params.filters[currentLine.name] !== this.newLines[currentLine.name]) {
-                                currentLine.opacity = 1 - (Math.abs(_dY) / currentY).toFixed(1);
-                            }
-
-                            // console.log(index2, deltaY, '----', currentY, newCoords.y)
-    
-                            return {
-                                y: Math.abs(deltaY) === 1 ? newCoords.y : currentY + deltaY,
-                                x: Math.abs(deltaX) === 1 ? newCoords.x : currentX + deltaX
-                            };
-                        }
+                        return {
+                            y: Math.abs(deltaY) <= 1 ? newCoords.y : currentY + deltaY,
+                            x: Math.abs(deltaX) <= 1 ? newCoords.x : currentX + deltaX
+                        };
                     }
 
                     return item;
@@ -215,18 +219,7 @@ class Chart {
 
                 return currentLine;
             })
-        // const max = getMax(data.lines);
-        // const step = this.width / (data.dates.length - 1);
 
-        // this.chartData = {
-        //     dates: data.dates,
-        //     max,
-        //     step
-        // };
-        // this.lines = this._getCoords(data.lines, step);
-
-
-        // if (!this._isStop && this._index < 500) {
     }
 
     /**
@@ -237,7 +230,7 @@ class Chart {
     getYFromPointValue(val) {
         const p = this.height - this.chartParams.paddings.top - this.chartParams.paddings.bottom;
 
-        return Math.round(this.height - p / this.chartData.max * val - this.chartParams.paddings.bottom);
+        return Math.round(this.height - p / this.currentChartData.max * val - this.chartParams.paddings.bottom);
     }
 
     /**
@@ -247,6 +240,8 @@ class Chart {
         const lines = this._lines || this.lines;
 
         lines.forEach(line => {
+            this._startOpacity = line.opacity;
+
             line.coords.forEach((item, index, arr) => {
                 if (line.coords[index + 1]) {
                     this._nextPoint = {
@@ -256,21 +251,14 @@ class Chart {
                 }
 
                 if (item.x === 0) {
-                    this._startLine(item.x, item.y, line.color, 1, line.opacity);
+                    this._startLine(item.x, item.y, line.color, item.lineWidth, line.opacity);
                 } else {
                     // this._drawSmoothLine(item.x, item.y, index + 1 === arr.length);
-                    this._drawLine(item.x, item.y);
+                    this._drawLine(item.x, item.y, item.opacity);
                 }
             })
         });
-    }
-
-    /**
-     * Подложка для графика (TODO: не нужна...)
-     */
-    _drawBackground() {
-        this.ctx.fillStyle = this.colors.bg;
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        this.ctx.globalAlpha = 1;
     }
 
     /**
@@ -281,11 +269,14 @@ class Chart {
      * @param {String} color 
      * @param {Number} lineWidth 
      */
-    _startLine(startX, startY, color, lineWidth = 1, opacity = 1) {
+    _startLine(startX, startY, color, lineWidth = 1, opacity) {
+        if (typeof opacity === 'number') {
+            this.ctx.globalAlpha = opacity;
+        }
+        this.ctx.globalAlpha = opacity;
         this.ctx.lineJoin = this.ctx.lineCap = 'round';
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = lineWidth;
-        this.ctx.globalAlpha = opacity;
         this.ctx.beginPath();
         this.ctx.moveTo(startX, startY);
     }
@@ -296,7 +287,10 @@ class Chart {
      * @param {Number} endX 
      * @param {Number} endY 
      */
-    _drawLine(endX, endY) {
+    _drawLine(endX, endY, opacity) {
+        if (typeof opacity === 'number' && this._startOpacity === 1) {
+            this.ctx.globalAlpha = opacity;
+        }
         this.ctx.lineTo(endX, endY);
         this.ctx.stroke();
     }

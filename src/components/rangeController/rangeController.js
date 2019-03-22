@@ -158,9 +158,10 @@ class RangeController {
         this.rangeBox.style.left = this.rangeMarkerStart.offsetWidth + 'px';
         this.rangeBox.style.right = this.rangeMarkerEnd.offsetWidth + 'px';
 
+        // TODO: 8 - магическое число (ширина стороны маркера). ну и в других местах тоже глянуть
         debounce(() => this.onUpdate({
-            start: this.rangeMarkerStart.offsetWidth,
-            end: this.rangeMarkerEnd.offsetLeft
+            start: this.rangeMarkerStart.offsetWidth - 8,
+            end: this.rangeMarkerEnd.offsetLeft + 8
         }), 100)()
     }
 

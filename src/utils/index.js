@@ -1,5 +1,6 @@
 import prepareData from './prepareData';
 import getMax from './getMax';
+import getMin from './getMin';
 import getDividers from './getDividers';
 import getDates from './getDates';
 import constants from './constants';
@@ -10,6 +11,7 @@ export {
     getDates,
     getDividers,
     getMax,
+    getMin,
     constants,
     debounce
 }

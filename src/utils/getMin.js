@@ -1,4 +1,4 @@
-const getMax = (data, params = {}) => {
+const getMin = (data, params = {}) => {
     const full = data.reduce((arr, item) => {
         const start = params.start || 0;
         const end = params.end + 1 || item.data.length;
@@ -10,7 +10,7 @@ const getMax = (data, params = {}) => {
         return arr.concat(item.data.slice(start, end))
     }, []);
 
-    return Math.max.apply(null, full);
+    return Math.min.apply(null, full);
 };
 
-export default getMax;
+export default getMin;
