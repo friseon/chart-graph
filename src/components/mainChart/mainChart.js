@@ -1,35 +1,166 @@
 import {
     getDividers,
-    constants
+    getMax,
+    getMin
 } from './../../utils';
 import Chart from '../chart/chart';
 
 class MainChart extends Chart {
-    _updateCurrentCoords(params) {
-        if (!this._dateDeviders || !this._dateDeviders.length) {
-            this._updateDateDeviders();
-        }
-        if (!this.currentChartData.deviders) {
-            this.currentChartData.deviders = getDividers(this.currentChartData.max, this.currentChartData.min);
-        }
+    /**
+     * Перевод значения в данных на отображение в графике
+     * 
+     * @param {Number} val – значение в данных
+     */
+    getYFromPointValue(val) {
+        const bottom = this.height - this.chartParams.paddings.bottom;
+        const k = (this.chartParams.paddings.top - bottom) / (this.currentChartState.max - this.currentChartState.min);
+        const result = bottom + (val - this.currentChartState.min) * k;
 
-        super._updateCurrentCoords(params);
+        return Math.round(result);
     }
 
-    updateCurrentCoords(params) {
-        super.updateCurrentCoords(params);
+    _updatingChart(params) {
+        this._isStop = true;
+
+        this.currentChartData = this.currentChartData
+            .map((line, index) => {
+                const currentLine = {...line};
+                const newLine = this.goalData[index];
+
+                if (!params.filters[currentLine.name]) {
+                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity >= 1) {
+                        currentLine.opacity = .4;
+                    }
+
+                    currentLine.opacity = currentLine.opacity > 0 ? +currentLine.opacity.toFixed(2) - .05 : 0;
+                } else if (this.currentChartState.updatedFilter === currentLine.name) {
+                    currentLine.opacity = currentLine.opacity <= 1 ? +currentLine.opacity.toFixed(2) + .05 : 1;
+                } else {
+                    currentLine.opacity = 1;
+                }
+
+                currentLine.coords = currentLine.coords.map((item, index2) => {
+                    const currentCoords = {...item};
+                    const newCoords = {
+                        ...newLine.coords[index2],
+                        x: newLine.coords[index2].x,
+                        y: newLine.coords[index2].y
+                    };
+                    const currentY = currentCoords.y;
+                    const currentX = currentCoords.x;
+
+                    if (currentX !== newCoords.x || currentY !== newCoords.y) {
+                        this._isStop = false;
+
+                        const isNearX = Math.abs(newCoords.x - currentX) <= 10;
+                        const isNearY = Math.abs(newCoords.y - currentY) <= 10;
+
+                        return {
+                            ...newLine.coords[index2],
+                            y: isNearY ? newCoords.y : currentY + newCoords.steps.y,
+                            x: isNearX ? newCoords.x : currentX + newCoords.steps.x
+                        };
+                    }
+
+                    return item;
+                })
+
+                return currentLine;
+            })
+    }
+
+    _updateCurrentData(params) {
+        this._isStop = true;
+        cancelAnimationFrame(this._reqId);
+
+        const max = getMax(this.currentChartData, params);
+        const min = getMin(this.currentChartData, params);
+        const step = this.width / (params.end - params.start);
+        const dates = this.originalChartState.dates.slice(params.start, params.end + 1);
+        const animationSpeed = 20;
+
+        this.currentChartState = {
+            ...this.originalChartState,
+            dates,
+            max,
+            min,
+            step,
+            start: params.start,
+            end: params.end,
+            updatedFilter: this._getUpdatedFilter(params),
+            filters: {...params.filters}
+        };
+
+        this.goalData = this.currentChartData.map(line => {
+            const currentLine = {...line};
+            const endPointValue = this.getYFromPointValue(line.data[params.end]);
+            const startPointValue = this.getYFromPointValue(line.data[params.start]);
+            const isLineHidden = !params.filters[currentLine.name];
+
+            currentLine.coords = line.data.map((point, index) => {
+                const currentCoords = {...currentLine.coords[index]};
+                const newY = this.getYFromPointValue(point);
+                const currentX = currentCoords.x;
+                const currentY = currentCoords.y;
+
+                if (!isLineHidden && index > params.end) {
+                    return {
+                        steps: {
+                            x: Math.round((this.width - currentX) / animationSpeed),
+                            y: Math.round((endPointValue - currentY) / animationSpeed)
+                        },
+                        x: this.width,
+                        y: endPointValue
+                    }
+                }
+
+                if (!isLineHidden && index < params.start) {
+                    return {
+                        steps: {
+                            x: -Math.round(currentX / animationSpeed),
+                            y: Math.round((startPointValue - currentY) / animationSpeed)
+                        },
+                        x: 0,
+                        y: startPointValue
+                    }
+                }
+
+                return {
+                    steps: {
+                        x: Math.round((step * (index - params.start) - currentX) / animationSpeed),
+                        y: isLineHidden ? -Math.round((currentY) / animationSpeed) : Math.round((newY - currentY) / animationSpeed)
+                    },
+                    x: Math.round(step * (index - params.start)),
+                    y: isLineHidden ? (currentY / 2) : newY
+                }
+            });
+
+            return currentLine;
+        });
 
         this._updateDateDeviders();
-        this.currentChartData.deviders = getDividers(this.currentChartData.max, this.currentChartData.min);
+        this.currentChartState.deviders = getDividers(this.currentChartState.max, this.currentChartState.min);
+
+        this.currentChartState.cuttedData = this.goalData
+            .map(line => {
+                return {
+                    ...line,
+                    coords: line.coords.slice(params.start, params.end + 1),
+                    data: line.data.slice(params.start, params.end + 1)
+                }
+            })
+            .filter(line => params.filters[line.name]);
+
+        this.redraw(params);
     }
 
     _updateDateDeviders() {
         this._dateDeviders = [];
-        const _currentDates = this.currentChartData.dates;
+        const _currentDates = this.currentChartState.dates;
         const _datesLength = _currentDates.length - 1;
         const _maxDatesAmount = 6;
         this._dateDevidersAmount = _datesLength;
-        this._dateStep = this.currentChartData.step;
+        this._dateStep = this.currentChartState.step;
 
         // ограничение по кол-ву отображаемых дат
         if (_datesLength > _maxDatesAmount) {
@@ -50,8 +181,8 @@ class MainChart extends Chart {
         }
     }
 
-    draw() {
-        super.draw();
+    _draw() {
+        super._draw();
 
         this._drawDates();
         this._drawDividers();
@@ -91,7 +222,7 @@ class MainChart extends Chart {
      * Рисование горизонтальных разделителей
      */
     _drawDividers() {
-        this.currentChartData.deviders.forEach(devider => {
+        this.currentChartState.deviders.forEach(devider => {
             const preparedValue = this.getYFromPointValue(devider);
 
             this._startLine(0, preparedValue, this.lineColor, 1);

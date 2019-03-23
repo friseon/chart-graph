@@ -1,6 +1,6 @@
 import {
     getMax,
-    getMin
+    hexToRgbA
 } from './../../utils';
 
 class Chart {
@@ -25,7 +25,7 @@ class Chart {
             this._bottom = this.height - params.paddings.bottom || 0;
         }
 
-        this._setOriginalChartData(params.data);
+        this._setOriginalChartState(params.data);
 
         this._index = 0;
     }
@@ -35,18 +35,17 @@ class Chart {
      * 
      * @param {Array} data – сырые данные
      */
-    _setOriginalChartData(data) {
+    _setOriginalChartState(data) {
         const max = getMax(data.lines);
         const step = this.width / (data.dates.length - 1);
 
-        this.originalChartData = {
+        this.originalChartState = {
             dates: data.dates,
             max,
             step
         };
-        this.currentChartData = {...this.originalChartData};
-
-        this.lines = this._setCoords(data.lines, step);
+        this.currentChartState = {...this.originalChartState};
+        this.currentChartData = this._setCoords(data.lines, step);
     }
 
     _setCoords(lines, step) {
@@ -65,210 +64,49 @@ class Chart {
     /**
      * Отрисовка графика
      */
-    draw() {
+    _draw() {
         this._drawCharts();
     }
 
     _getUpdatedFilter(params) {
         let updatedFilter;
 
-        if (!this.currentChartData || !this.currentChartData.filters) {
+        if (!this.currentChartState || !this.currentChartState.filters) {
             return;
         }
 
         Object.keys(params.filters).forEach(filterName => {
-            if (this.currentChartData.filters[filterName] !== params.filters[filterName]) {
+            if (this.currentChartState.filters[filterName] !== params.filters[filterName]) {
                 updatedFilter = filterName;
                 return
             }
-        });;
+        });
 
         return updatedFilter
     }
 
-    updateCurrentCoords(params) {
-        this._isStop = true;
-        cancelAnimationFrame(this._reqId);
-
-        const max = getMax(this.lines, params);
-        const min = getMin(this.lines, params);
-        const step = this.width / (params.end - params.start);
-        const dates = this.originalChartData.dates.slice(params.start, params.end + 1);
-
-        this.currentChartData = {
-            ...this.originalChartData,
-            dates,
-            max,
-            min,
-            step,
-            start: params.start,
-            end: params.end,
-            updatedFilter: this._getUpdatedFilter(params),
-            filters: {...params.filters}
-        };
-
-        this.goalData = this.lines.map(line => {
-            const currentLine = {...line};
-            const endPointValue = this.getYFromPointValue(line.data[params.end]);
-            const startPointValue = this.getYFromPointValue(line.data[params.start]);
-
-            currentLine.coords = line.data.map((point, index) => {
-                if (index > params.end) {
-                    return {
-                        hidden: true,
-                        x: this.width,
-                        y: endPointValue
-                    }
-                }
-                if (index < params.start) {
-                    return {
-                        hidden: true,
-                        x: 0,
-                        y: startPointValue
-                    }
-                }
-
-                return {
-                    hidden: false,
-                    x: step * (index - params.start),
-                    y: this.getYFromPointValue(point)
-                }
-            });
-
-            return currentLine;
-        });
-
-        this.currentChartData.cuttedData = this.goalData
-            .map(line => {
-                return {
-                    ...line,
-                    coords: line.coords.slice(params.start, params.end + 1),
-                    data: line.data.slice(params.start, params.end + 1)
-                }
-            })
-            .filter(line => params.filters[line.name]);
-
-        this.redraw(params);
-    }
-
     redraw(params) {
-        this._updateCurrentCoords(params);
+        this._updatingChart(params);
         this.clear();
-        this.draw();
+        this._draw();
 
         if (!this._isStop) {
             this._reqId = window.requestAnimationFrame(() => this.redraw(params));
         }
     }
 
-    _updateCurrentCoords(params) {
-        this._isStop = true;
-
-        this.lines = this.lines
-            .map((line, index) => {
-                const currentLine = {...line};
-                const newLine = this.goalData[index];
-
-                if (!params.filters[currentLine.name]) {
-                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity > 1) {
-                        currentLine.opacity = .4;
-                    }
-
-                    currentLine.opacity = currentLine.opacity > 0 ? +currentLine.opacity.toFixed(2) - .05 : 0;
-                } else if (this.currentChartData.updatedFilter === currentLine.name) {
-                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity > 1) {
-                        currentLine.opacity = .4;
-                    }
-
-                    currentLine.opacity = currentLine.opacity <= 1 ? +currentLine.opacity.toFixed(2) + .05 : 1;
-                } else {
-                    currentLine.opacity = 1;
-                }
-
-                currentLine.coords = currentLine.coords.map((item, index2) => {
-                    const currentCoords = {...item};
-                    const newCoords = {
-                        ...newLine.coords[index2],
-                        x: +newLine.coords[index2].x.toFixed(1),
-                        y: +newLine.coords[index2].y.toFixed(1)
-                    };
-                    const currentY = +currentCoords.y.toFixed(1);
-                    const currentX = +currentCoords.x.toFixed(1);
-
-                    if (!params.filters[currentLine.name]) {
-                        if (currentY > -10) {
-                            this._isStop = false;
-
-                            const deltaY = this._bottom / 10;
-
-                            return {
-                                ...currentCoords,
-                                y: currentY < -10 ? 0 : currentY - Math.round(deltaY)
-                            }
-                        }
-                    } else if (currentX !== newCoords.x || currentY !== newCoords.y) {
-                        this._isStop = false;
-
-                        const deltaX = (newCoords.x - currentX) / 10;
-                        const deltaY = (newCoords.y - currentY) / 10;
-
-                        return {
-                            ...newLine.coords[index2],
-                            y: Math.abs(deltaY) <= 1 ? newCoords.y : currentY + deltaY,
-                            x: Math.abs(deltaX) <= 1 ? newCoords.x : currentX + deltaX
-                        };
-                    }
-
-                    return item;
-                })
-
-                return currentLine;
-            })
-
-    }
-
-    /**
-     * Перевод значения в данных на отображение в графике
-     * 
-     * @param {Number} val – значение в данных
-     */
-    getYFromPointValue(val) {
-        const bottom = this.height - this.chartParams.paddings.bottom;
-        const k = (this.chartParams.paddings.top - bottom) / (this.currentChartData.max - this.currentChartData.min);
-        const result = bottom + (val - this.currentChartData.min) * k;
-
-        return result;
-    }
-
     /**
      * Отрисовка линий графика
      */
     _drawCharts() {
-        const lines = this._lines || this.lines;
-
-        lines.forEach(line => {
-            if (line.opacity) {
-                this.ctx.globalAlpha = line.opacity;
-            }
-
-            line.coords.forEach((item, index, arr) => {
-                if (line.coords[index + 1] && !item.hidden) {
-                    this._nextPoint = {
-                        x: line.coords[index + 1].x,
-                        y: line.coords[index + 1].y
-                    }
-                }
-
-                if (item.x === 0) {
-                    this._startLine(item.x, item.y, line.color, item.lineWidth);
-                } else if (item.hidden) {
-                    this.ctx.moveTo(item.x, item.y)
+        this.currentChartData.forEach(line => {
+            line.coords.forEach((item, index) => {
+                if (index === 0) {
+                    this._startLine(item.x, item.y, hexToRgbA(line.color, line.opacity), item.lineWidth);
                 } else {
-                    this._drawLine(item.x, item.y, item.opacity);
+                    this._drawLine(item.x, item.y,);
                 }
-            })
-
-            this.ctx.globalAlpha = 1;
+            });
         });
     }
 
@@ -295,7 +133,7 @@ class Chart {
      * @param {Number} endY 
      */
     _drawLine(endX, endY) {
-        this.ctx.lineTo(endX - .5, endY - .5);
+        this.ctx.lineTo(endX, endY);
         this.ctx.stroke();
     }
 

@@ -116,7 +116,7 @@ class SearchPanel {
     }
 
     _updateSearchChart() {
-        this.searchChart.updateCurrentCoords(this._getFilteredData('search'));
+        this.searchChart._updateCurrentData(this._getFilteredData('search'));
     }
 
     _updateMainChart() {

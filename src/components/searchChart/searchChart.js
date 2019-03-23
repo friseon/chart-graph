@@ -6,30 +6,25 @@ import {
 } from './../../utils';
 
 class SearchChart extends Chart {
-    _setcurrentChartData(data) {
-        super._setcurrentChartData(data);
-
-        this._originalData = [...this.lines];
-    }
-
     getYFromPointValue(val) {
-        return this.height - this.height / this.currentChartData.max * val;
+        return this.height - this.height / this.currentChartState.max * val;
     }
 
-    updateCurrentCoords(params) {
+    _updateCurrentData(params) {
         this._isStop = true;
         cancelAnimationFrame(this._reqId);
 
-        const max = getMax(this.lines, {
+        const max = getMax(this.currentChartData, {
             filters: params.filters
         });
-        const min = getMin(this.lines, {
+        const min = getMin(this.currentChartData, {
             filters: params.filters
         });
-        const step = this.width;
+        const step = this.width / (this.currentChartState.dates.length - 1);
+        const animationSpeed = 20;
 
-        this.currentChartData = {
-            ...this.currentChartData,
+        this.currentChartState = {
+            ...this.currentChartState,
             updatedFilter: this._getUpdatedFilter(params),
             filters: {...params.filters},
             max,
@@ -37,13 +32,22 @@ class SearchChart extends Chart {
             step
         }
 
-        this.goalData = this.lines.map(line => {
+        this.goalData = this.currentChartData.map(line => {
             const currentLine = {...line};
+            const isLineHidden = !params.filters[currentLine.name];
 
-            currentLine.coords = line.data.map((point) => {
+            currentLine.coords = line.data.map((point, index) => {
+                const currentCoords = {...currentLine.coords[index]};
+                const newY = this.getYFromPointValue(point);
+                const currentY = currentCoords.y;
+
                 return {
                     ...point,
-                    y: this.getYFromPointValue(point)
+                    steps: {
+                        y: isLineHidden ? -Math.round((currentY) / animationSpeed) : Math.round((newY - currentY) / animationSpeed)
+                    },
+                    x: Math.round(step * index),
+                    y: isLineHidden ? (currentY / 2) : newY
                 }
             });
 
@@ -53,10 +57,10 @@ class SearchChart extends Chart {
         this.redraw(params);
     }
 
-    _updateCurrentCoords(params) {
+    _updatingChart(params) {
         this._isStop = true;
 
-        this.lines = this.lines
+        this.currentChartData = this.currentChartData
             .map((line, index) => {
                 const currentLine = {...line};
                 const newLine = this.goalData[index];
@@ -67,7 +71,7 @@ class SearchChart extends Chart {
                     }
 
                     currentLine.opacity = currentLine.opacity > 0 ? +currentLine.opacity.toFixed(2) - .05 : 0;
-                } else if (this.currentChartData.updatedFilter === currentLine.name) {
+                } else if (this.currentChartState.updatedFilter === currentLine.name) {
                     if (typeof currentLine.opacity === 'undefined' || currentLine.opacity > 1) {
                         currentLine.opacity = .4;
                     }
@@ -83,27 +87,14 @@ class SearchChart extends Chart {
                         y: +newLine.coords[index2].y.toFixed(1)
                     };
 
-                    if (!params.filters[currentLine.name]) {
-                        if (currentY > -10) {
-                            this._isStop = false;
-
-                            const deltaY = this.height / 10;
-
-                            return {
-                                ...currentCoords,
-                                y: currentY < -10 ? -10 : currentY - deltaY
-                            }
-                        }
-                    } else if (currentY !== newCoords.y) {
+                    if (currentY !== newCoords.y) {
                         this._isStop = false;
 
-                        const _dY = newCoords.y - currentY;
-
-                        const deltaY = currentY !== newCoords.y ? _dY / 10 : 0;
+                        const isNearY = Math.abs(newCoords.y - currentY) <= 5;
 
                         return {
-                            ...currentCoords,
-                            y: Math.abs(deltaY) <= 1 ? newCoords.y : currentY + deltaY
+                            ...newLine.coords[index2],
+                            y: isNearY ? newCoords.y : currentY + newCoords.steps.y
                         };
                     }
 

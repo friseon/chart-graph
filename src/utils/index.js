@@ -5,6 +5,7 @@ import getDividers from './getDividers';
 import getDates from './getDates';
 import constants from './constants';
 import debounce from './debounce';
+import hexToRgbA from './hexToRgbA';
 
 export {
     prepareData,
@@ -13,5 +14,6 @@ export {
     getMax,
     getMin,
     constants,
-    debounce
+    debounce,
+    hexToRgbA
 }
