@@ -1,5 +1,9 @@
 import './rangeController.scss';
 
+import {
+    debounce
+} from './../../utils';
+
 class RangeController {
     constructor(params) {
         const rangePanel = document.createElement('div');
@@ -71,7 +75,9 @@ class RangeController {
      * @param {Boolean} isBox - двигаем диапазон целиком
      */
     _onStartMoveMarkerPosition(eventStart, type, isBox) {
-        const _onMoveMarkerMethod = (eventMove) => this._onMarkerMove.call(this, eventMove, type);
+        const _onMoveMarkerMethod = (eventMove) => {
+            this._onMarkerMove.call(this, eventMove, type)
+        };
 
         const _onStopMoveMarker = () => {
             document.removeEventListener('pointermove', _onMoveMarkerMethod);
@@ -151,6 +157,12 @@ class RangeController {
 
         this.rangeBox.style.left = this.rangeMarkerStart.offsetWidth + 'px';
         this.rangeBox.style.right = this.rangeMarkerEnd.offsetWidth + 'px';
+
+        // TODO: 8 - магическое число (ширина стороны маркера). ну и в других местах тоже глянуть
+        debounce(() => this.onUpdate({
+            start: this.rangeMarkerStart.offsetWidth - 8,
+            end: this.rangeMarkerEnd.offsetLeft + 8
+        }), 100)()
     }
 
     _onMarkerMove(e, type) {
@@ -159,10 +171,11 @@ class RangeController {
 
         const newCoords = this._getMarkerNewPosition(shift, type);
 
-        this.currentCoords[type] = e.clientX;
-
         this._setMarkerPosition(newCoords, type);
+
+        this.currentCoords[type] = e.clientX;
     }
 }
+
 
 export default RangeController;

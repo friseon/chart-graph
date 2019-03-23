@@ -5,10 +5,10 @@ import {
 import Chart from '../chart/chart';
 
 class MainChart extends Chart {
-    _prepareChartData(data) {
-        super._prepareChartData(data);
+    _updateCurrentCoords(data) {
+        super._updateCurrentCoords(data);
 
-        this.chartData.deviders = getDividers(this.chartData.max);
+        this.currentChartData.deviders = getDividers(this.currentChartData.max);
     }
 
     draw() {
@@ -22,10 +22,11 @@ class MainChart extends Chart {
      */
     _drawDates() {
         const _dateDeviders = [];
-        const _datesLength = this.chartData.dates.length;
+        const _currentDates = this.currentChartData.dates;
+        const _datesLength = _currentDates.length;
         const _maxDatesAmount = 6;
         let _dateDevidersAmount = _datesLength;
-        let _dateStep = this.chartData.step;
+        let _dateStep = this.currentChartData.step;
 
         // ограничение по кол-ву отображаемых дат
         if (_datesLength > _maxDatesAmount) {
@@ -37,7 +38,7 @@ class MainChart extends Chart {
         for (let i = 0; i < _dateDevidersAmount; i++) {
             const dateIndex = Math.round(_datesLength / _dateDevidersAmount * i);
 
-            _dateDeviders.push(this.chartData.dates[dateIndex]);
+            _dateDeviders.push(_currentDates[dateIndex]);
         }
         
         _dateDeviders.forEach((devider, index) => {
@@ -70,7 +71,7 @@ class MainChart extends Chart {
      * Рисование горизонтальных разделителей
      */
     _drawDividers() {
-        this.chartData.deviders.forEach(devider => {
+        this.currentChartData.deviders.forEach(devider => {
             const preparedValue = this.getYFromPointValue(devider);
 
             this._startLine(0, preparedValue, this.lineColor, 1);

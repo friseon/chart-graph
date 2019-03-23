@@ -99,6 +99,7 @@ class SearchPanel {
     _getFilteredData(type) {
         let dates = this.data.dates;
         let start = this.startIndex;
+
         if (Number(start) <= 0) {
             start = 0;
         }
@@ -107,31 +108,15 @@ class SearchPanel {
             dates = dates.slice(start, this.endIndex);
         }
 
-        const filteredData = {
-            dates,
-            lines: this.data.lines
-                .filter(line => {
-                    return this._state.filters[line.name];
-                })
-                .map(line => {
-                    if (type === 'search') {
-                        // не кромсамаем линии по диапазону для поискового графика
-                        return line;
-                    }
-
-                    const filtered = {...line};
-
-                    filtered.data = filtered.data.slice(start, this.endIndex);
-
-                    return filtered;
-                })
+        return {
+            filters: this._state.filters,
+            start,
+            end: this.endIndex - 1
         };
-
-        return filteredData;
     }
 
     _updateSearchChart() {
-        this.searchChart.redraw(this._getFilteredData('search'));
+        this.searchChart.updateCurrentCoords(this._getFilteredData('search'));
     }
 
     _updateMainChart() {
