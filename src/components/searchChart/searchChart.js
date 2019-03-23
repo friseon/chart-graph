@@ -87,7 +87,7 @@ class SearchChart extends Chart {
                         if (currentY > -10) {
                             this._isStop = false;
 
-                            const deltaY = Math.max(this.height / 30, currentY / 10);
+                            const deltaY = this.height / 10;
 
                             return {
                                 ...currentCoords,

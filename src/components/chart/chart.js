@@ -91,7 +91,7 @@ class Chart {
         cancelAnimationFrame(this._reqId);
 
         const max = getMax(this.lines, params);
-        const min = getMin(this.lines, params); // доработай минимальное значение
+        const min = getMin(this.lines, params);
         const step = this.width / (params.end - params.start);
         const dates = this.originalChartData.dates.slice(params.start, params.end + 1);
 
@@ -199,11 +199,11 @@ class Chart {
                         if (currentY > -10) {
                             this._isStop = false;
 
-                            const deltaY = Math.max(this._bottom / 20, currentY / 10);
+                            const deltaY = this._bottom / 10;
 
                             return {
                                 ...currentCoords,
-                                y: currentY < -10 ? 0 : currentY - deltaY
+                                y: currentY < -10 ? 0 : currentY - Math.round(deltaY)
                             }
                         }
                     } else if (currentX !== newCoords.x || currentY !== newCoords.y) {
@@ -236,11 +236,8 @@ class Chart {
         const bottom = this.height - this.chartParams.paddings.bottom;
         const k = (this.chartParams.paddings.top - bottom) / (this.currentChartData.max - this.currentChartData.min);
         const result = bottom + (val - this.currentChartData.min) * k;
-        // console.log(this.currentChartData)
-        return result;
 
-        const p = this.height - this.chartParams.paddings.bottom - this.chartParams.paddings.top;
-        // return Math.round(this.height - p / (this.currentChartData.max) * val) - this.chartParams.paddings.bottom;
+        return result;
     }
 
     /**
@@ -267,7 +264,6 @@ class Chart {
                 } else if (item.hidden) {
                     this.ctx.moveTo(item.x, item.y)
                 } else {
-                    // this._drawSmoothLine(item.x, item.y, index + 1 === arr.length);
                     this._drawLine(item.x, item.y, item.opacity);
                 }
             })
@@ -300,44 +296,6 @@ class Chart {
      */
     _drawLine(endX, endY) {
         this.ctx.lineTo(endX - .5, endY - .5);
-        this.ctx.stroke();
-    }
-
-    _drawSmoothLine2(endX, endY, isLast) {
-        var c = (endX + this._nextPoint.x) / 2;
-        var d = (endY + this._nextPoint.y) / 2;
-
-        var a = (endX + c) / 2;
-        var b = (endY + d) / 2;
-
-        var f = (c + this._nextPoint.x) / 2;
-        var e = (d + this._nextPoint.y) / 2;
-
-        if (isLast) {
-            c = this._nextPoint.x;
-            d = this._nextPoint.y;
-        }
-
-        this.ctx.quadraticCurveTo(endX, endY, a, b);
-        this.ctx.quadraticCurveTo(a, b, c, d);
-        this.ctx.quadraticCurveTo(c, d, f, e);
-        this.ctx.stroke();
-    }
-
-    _drawSmoothLine(endX, endY, isLast) {
-        var a = endX + (this._nextPoint.x - endX) / 3;
-        var b = endY + (this._nextPoint.y - endY) / 3;
-
-        var c = endX + (this._nextPoint.x - endX) / 3 * 2;
-        var d = endY + (this._nextPoint.y - endY) / 3 * 2;
-
-        if (isLast) {
-            c = this._nextPoint.x;
-            d = this._nextPoint.y;
-        }
-
-        this.ctx.quadraticCurveTo(endX, endY, a, b);
-        this.ctx.quadraticCurveTo(a, b, c, d);
         this.ctx.stroke();
     }
 
