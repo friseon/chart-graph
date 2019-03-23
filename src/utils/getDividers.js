@@ -1,9 +1,16 @@
-const getDividers = (max) => {
+const getDividers = (max, min) => {
     const _deviders = [];
-    const _devidersAmount = 6;
+    const _devidersAmount = 4;
+    const step = (max - min) / _devidersAmount;
 
-    for (let i = 0; i < _devidersAmount; i++) {
-        _deviders.push(Math.floor(max / _devidersAmount * i));
+    for (let i = 1; i <= _devidersAmount; i++) {
+        if (i === 1) {
+            _deviders.push(min);
+        } if (i === _devidersAmount) {
+            _deviders.push(Math.round(max * .95));
+        } else {
+            _deviders.push(min + Math.round(step) * i);
+        }
     }
 
     return _deviders.sort((a, b) => (a - b));

@@ -115,18 +115,21 @@ class Chart {
             currentLine.coords = line.data.map((point, index) => {
                 if (index > params.end) {
                     return {
+                        hidden: true,
                         x: this.width,
                         y: endPointValue
                     }
                 }
                 if (index < params.start) {
                     return {
+                        hidden: true,
                         x: 0,
                         y: startPointValue
                     }
                 }
 
                 return {
+                    hidden: false,
                     x: step * (index - params.start),
                     y: this.getYFromPointValue(point)
                 }
@@ -178,8 +181,9 @@ class Chart {
                     }
 
                     currentLine.opacity = currentLine.opacity <= 1 ? +currentLine.opacity.toFixed(2) + .05 : 1;
+                } else {
+                    currentLine.opacity = 1;
                 }
-
 
                 currentLine.coords = currentLine.coords.map((item, index2) => {
                     const currentCoords = {...item};
@@ -209,6 +213,7 @@ class Chart {
                         const deltaY = (newCoords.y - currentY) / 10;
 
                         return {
+                            ...newLine.coords[index2],
                             y: Math.abs(deltaY) <= 1 ? newCoords.y : currentY + deltaY,
                             x: Math.abs(deltaX) <= 1 ? newCoords.x : currentX + deltaX
                         };
@@ -228,9 +233,14 @@ class Chart {
      * @param {Number} val – значение в данных
      */
     getYFromPointValue(val) {
-        const p = this.height - this.chartParams.paddings.top - this.chartParams.paddings.bottom;
+        const bottom = this.height - this.chartParams.paddings.bottom;
+        const k = (this.chartParams.paddings.top - bottom) / (this.currentChartData.max - this.currentChartData.min);
+        const result = bottom + (val - this.currentChartData.min) * k;
+        // console.log(this.currentChartData)
+        return result;
 
-        return Math.round(this.height - p / this.currentChartData.max * val - this.chartParams.paddings.bottom);
+        const p = this.height - this.chartParams.paddings.bottom - this.chartParams.paddings.top;
+        // return Math.round(this.height - p / (this.currentChartData.max) * val) - this.chartParams.paddings.bottom;
     }
 
     /**
@@ -240,10 +250,12 @@ class Chart {
         const lines = this._lines || this.lines;
 
         lines.forEach(line => {
-            this._startOpacity = line.opacity;
+            if (line.opacity) {
+                this.ctx.globalAlpha = line.opacity;
+            }
 
             line.coords.forEach((item, index, arr) => {
-                if (line.coords[index + 1]) {
+                if (line.coords[index + 1] && !item.hidden) {
                     this._nextPoint = {
                         x: line.coords[index + 1].x,
                         y: line.coords[index + 1].y
@@ -251,7 +263,9 @@ class Chart {
                 }
 
                 if (item.x === 0) {
-                    this._startLine(item.x, item.y, line.color, item.lineWidth, line.opacity);
+                    this._startLine(item.x, item.y, line.color, item.lineWidth);
+                } else if (item.hidden) {
+                    this.ctx.moveTo(item.x, item.y)
                 } else {
                     // this._drawSmoothLine(item.x, item.y, index + 1 === arr.length);
                     this._drawLine(item.x, item.y, item.opacity);
@@ -270,15 +284,11 @@ class Chart {
      * @param {String} color 
      * @param {Number} lineWidth 
      */
-    _startLine(startX, startY, color, lineWidth = 1, opacity) {
-        if (typeof opacity === 'number') {
-            this.ctx.globalAlpha = opacity;
-        }
-        this.ctx.globalAlpha = opacity;
+    _startLine(startX, startY, color, lineWidth = 1) {
+        this.ctx.beginPath();
         this.ctx.lineJoin = this.ctx.lineCap = 'round';
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = lineWidth;
-        this.ctx.beginPath();
         this.ctx.moveTo(startX, startY);
     }
 
@@ -288,11 +298,8 @@ class Chart {
      * @param {Number} endX 
      * @param {Number} endY 
      */
-    _drawLine(endX, endY, opacity) {
-        if (typeof opacity === 'number' && this._startOpacity === 1) {
-            this.ctx.globalAlpha = opacity;
-        }
-        this.ctx.lineTo(endX, endY);
+    _drawLine(endX, endY) {
+        this.ctx.lineTo(endX - .5, endY - .5);
         this.ctx.stroke();
     }
 

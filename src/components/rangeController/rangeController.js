@@ -134,8 +134,8 @@ class RangeController {
             this.currentCoords.end = this.limits.right - 8;
         }
 
-        this.rangeMarkerStart.style.right = this.width - this.currentCoords.start  + 'px';
-        this.rangeMarkerEnd.style.left = this.currentCoords.end + 'px';
+        this.rangeMarkerStart.style.right = Math.round(this.width - this.currentCoords.start)  + 'px';
+        this.rangeMarkerEnd.style.left = Math.round(this.currentCoords.end) + 'px';
 
         this.rangeBox.style.left = this.rangeMarkerStart.offsetWidth + 'px';
         this.rangeBox.style.right = this.rangeMarkerEnd.offsetWidth + 'px';
@@ -149,7 +149,7 @@ class RangeController {
      */
     _setMarkerPosition(coords, type) {
         if (type === 'start') {
-            this.rangeMarkerStart.style.right = this.width - coords  + 'px';
+            this.rangeMarkerStart.style.right = this.width - coords + 'px';
         }
         if (type === 'end') {
             this.rangeMarkerEnd.style.left = coords + 'px';
@@ -171,7 +171,7 @@ class RangeController {
 
         const newCoords = this._getMarkerNewPosition(shift, type);
 
-        this._setMarkerPosition(newCoords, type);
+        this._setMarkerPosition(Math.round(newCoords), type);
 
         this.currentCoords[type] = e.clientX - this.container.offsetLeft;
     }
