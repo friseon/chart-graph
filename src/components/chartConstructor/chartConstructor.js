@@ -128,7 +128,8 @@ class ChartConstructor {
         const delta = this.mainChart.currentChartData.step / 2;
 
         const currentValue = this.currentData.find((item) => {
-            return e.clientX > (item.x - delta) && e.clientX <= (item.x + delta);
+            const cursorX = e.clientX - this.detailsPanel.offsetLeft;
+            return cursorX > (item.x - delta) && cursorX <= (item.x + delta);
         });
 
 

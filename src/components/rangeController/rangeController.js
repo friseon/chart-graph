@@ -91,7 +91,7 @@ class RangeController {
         document.addEventListener('pointermove', _onMoveMarkerMethod);
         document.addEventListener('pointerup', _onStopMoveMarker);
 
-        this.currentCoords[type] = eventStart.clientX;
+        this.currentCoords[type] = eventStart.clientX - this.container.offsetLeft;
     }
 
     _getMarkerNewPosition(shift, type) {
@@ -167,13 +167,13 @@ class RangeController {
 
     _onMarkerMove(e, type) {
         const coord = this.currentCoords[type];
-        const shift = coord - e.clientX;
+        const shift = coord + this.container.offsetLeft - e.clientX;
 
         const newCoords = this._getMarkerNewPosition(shift, type);
 
         this._setMarkerPosition(newCoords, type);
 
-        this.currentCoords[type] = e.clientX;
+        this.currentCoords[type] = e.clientX - this.container.offsetLeft;
     }
 }
 
