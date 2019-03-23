@@ -12,7 +12,7 @@ prod_data.forEach(data => {
         idCanvas: "main-chart",
         data,
         width: window.innerWidth / 4 * 3,
-        height: Math.min(400, window.innerWidth / 2)
+        height: window.screen.height / 2
     });
 
     chart.init();

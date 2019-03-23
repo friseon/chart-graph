@@ -257,8 +257,9 @@ class Chart {
                     this._drawLine(item.x, item.y, item.opacity);
                 }
             })
+
+            this.ctx.globalAlpha = 1;
         });
-        this.ctx.globalAlpha = 1;
     }
 
     /**

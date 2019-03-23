@@ -56,7 +56,7 @@ class ChartConstructor {
             data: this.data,
             container: this.container,
             width: params.width,
-            rangeHeight: 100,
+            rangeHeight: Math.max(params.height / 4, 100),
             onUpdate: (params) => {
                 this._hidePopup();
                 this.mainChart.updateCurrentCoords(params, true);
