@@ -3,6 +3,12 @@ import {
     getMax,
     getMin
 } from './../../utils';
+
+import {
+    state,
+    chartColors
+} from './../../config/config';
+
 import Chart from '../chart/chart';
 
 class MainChart extends Chart {
@@ -213,7 +219,7 @@ class MainChart extends Chart {
             }
 
             this.ctx.font = '12px Arial';
-            this.ctx.fillStyle = '#f5f5f5';
+            this.ctx.fillStyle = chartColors.text[state.currentTheme];
             this.ctx.fillText(date,
                 x,
                 y - this.chartParams.paddings.bottom + 20);
@@ -229,9 +235,9 @@ class MainChart extends Chart {
         this.currentChartState.deviders.forEach(devider => {
             const preparedValue = this.getYFromPointValue(devider);
 
-            this._startLine(0, preparedValue, this.lineColor);
+            this._startLine(0, preparedValue, chartColors.line[state.currentTheme]);
             this.ctx.font = '12px Arial';
-            this.ctx.fillStyle = '#f5f5f5';
+            this.ctx.fillStyle = chartColors.text[state.currentTheme];
             this.ctx.fillText(devider, 5, preparedValue - 5);
             this.ctx.lineTo(this.width, preparedValue);
             this.ctx.stroke();

@@ -5,11 +5,13 @@ import {
 
 import {
     MainChart,
-    SearchPanel
+    SearchPanel,
+    TogglerTheme
 } from '../index';
 
 import {
-    chartColors
+    chartColors,
+    state
 } from '../../config/config';
 
 import './chartConstructor.scss';
@@ -21,12 +23,17 @@ class ChartConstructor {
         this.container = document.createElement('div');
         this.container.classList.add('chart-container');
         this.container.style.width = params.width + 'px';
-        this.container.style.backgroundColor = chartColors.main.night;
-        this.container.style.color = chartColors.text.night;
+        this.container.style.backgroundColor = chartColors.main[state.currentTheme];
+        this.container.style.color = chartColors.text2[state.currentTheme];
 
         this.detailsPanel = document.createElement('div');
         this.detailsPanel.classList.add('details-panel');
 
+        this.chartTitle = document.createElement('h2');
+        this.chartTitle.classList.add('chart-title');
+        this.chartTitle.innerHTML = params.title;
+
+        this.container.appendChild(this.chartTitle);
 
         this.data = prepareData(params.data);
 
@@ -37,8 +44,7 @@ class ChartConstructor {
             data: this.data,
             container: this.detailsPanel,
             onUpdateData: this.onUpdateData,
-            lineColor: chartColors.line.night,
-            width: params.width,
+            width: params.width - 24,
             height: params.height,
             paddings: {
                 top: 10,
@@ -56,7 +62,7 @@ class ChartConstructor {
         this.searchPanel = new SearchPanel({
             data: this.data,
             container: this.container,
-            width: params.width,
+            width: params.width - 24,
             rangeHeight: Math.max(params.height / 4, 100),
             onUpdate: (params) => {
                 this._hidePopup();
@@ -65,6 +71,23 @@ class ChartConstructor {
                     dates: this.mainChart.currentChartState.dates,
                     lines: this.mainChart.currentChartState.cuttedData
                 });
+            }
+        });
+
+        this.toggler = new TogglerTheme({
+            chartId: this._chartId,
+            container: this.container,
+            onChange: () => {
+                this.searchPanel.updateTheme();
+                this.mainChart.updateTheme();
+                this.chartTitle.style.color = chartColors.text2[state.currentTheme];
+                this.container.style.backgroundColor = chartColors.main[state.currentTheme];
+                this.container.style.color = chartColors.text2[state.currentTheme];
+                this.detailsPopup.style.backgroundColor = chartColors.main[state.currentTheme];
+                this.detailsLine.style.backgroundColor = chartColors.line[state.currentTheme];
+                document.querySelectorAll('.' + Array.from(this.pointMarker.classList).join('. ')).forEach(marker => {
+                    marker.style.backgroundColor = chartColors.main[state.currentTheme];
+                })
             }
         });
 
@@ -115,13 +138,13 @@ class ChartConstructor {
         const _onMoveLineMethod = (eventMove) => this._onLineMove.call(this, eventMove);
 
         const _onStopMoveLine = (e) => {
-            eventBuilder.removeEventListener(document, 'move', _onMoveLineMethod);
+            eventBuilder.removeEventListener(this.detailsPanel, 'move', _onMoveLineMethod);
             eventBuilder.removeEventListener(document, 'end', _onStopMoveLine);
 
             this._onLineMove(e)
         }
 
-        eventBuilder.addEventListener(document, 'move', _onMoveLineMethod);
+        eventBuilder.addEventListener(this.detailsPanel, 'move', _onMoveLineMethod);
         eventBuilder.addEventListener(document, 'end', _onStopMoveLine);
     }
 
@@ -181,13 +204,13 @@ class ChartConstructor {
         // TODO: привести к номальному виду popup
         this.detailsLine = document.createElement('div');
         this.detailsLine.classList.add('details-line');
-        this.detailsLine.style.backgroundColor = chartColors.line.night;
         // TODO: config
         this.detailsLine.style.bottom = this.mainChart.chartParams.paddings.bottom + 5 + 'px';
 
         this.detailsPopup = document.createElement('div');
         this.detailsPopup.classList.add('details-popup');
-        this.detailsPopup.style.backgroundColor = chartColors.main.night;
+        this.detailsPopup.style.backgroundColor = chartColors.main[state.currentTheme];
+        this.detailsLine.style.backgroundColor = chartColors.line[state.currentTheme];
 
         const popupDate = document.createElement('h3');
         popupDate.classList.add('details-popup__date');
@@ -200,7 +223,7 @@ class ChartConstructor {
 
         this.pointMarker = document.createElement('div');
         this.pointMarker.classList.add('point-marker');
-        this.pointMarker.style.backgroundColor = chartColors.main.night;
+        this.pointMarker.style.backgroundColor = chartColors.main[state.currentTheme];
 
         this.popupLineDetails = document.createElement('div');
         this.popupLineDetails.classList.add('details-popup__line-info');

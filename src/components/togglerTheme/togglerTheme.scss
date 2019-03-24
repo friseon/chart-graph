@@ -1,0 +1,14 @@
+.toggler-theme {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px 4px 4px;
+    position: absolute;
+    bottom: 24px;
+    color: #108be3;
+    font-size: 24px;
+
+    input[type=checkbox] {
+        display: none;
+    }
+}

@@ -6,23 +6,21 @@
     .range-box {
         position: absolute;
         height: 100%;
-        border-width: 4px 0;
-        border-color: rgba($color: #fff, $alpha: .3);
+        border-width: 3px 0;
         border-style: solid;
         box-sizing: border-box;
         cursor: pointer;
+        opacity: .4;
     }
 
     .range-marker {
         position: absolute;
         height: 100%;
-        background-color: #000;
         top: 0;
         cursor: pointer;
-        border-color: #fff;
         border-width: 0;
         border-style: solid;
-        opacity: .3;
+        opacity: .4;
 
         &.marker-start {
             left: 0;

@@ -13,8 +13,9 @@ prod_data.forEach(data => {
     const chart = new ChartConstructor({
         idCanvas: "main-chart",
         data,
-        width: window.innerWidth / 5 * 4,
-        height: window.screen.height / 2
+        width: window.innerWidth,
+        height: window.screen.height / 2,
+        title: 'Followers'
     });
 
     chart.init();

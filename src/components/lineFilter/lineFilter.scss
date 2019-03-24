@@ -25,6 +25,7 @@
         &.checked {
             &:before {
                 content: '\2714';
+                color: #fff;
                 font-size: 12px;
             }
         }

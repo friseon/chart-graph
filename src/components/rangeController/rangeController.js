@@ -5,6 +5,10 @@ import {
     eventBuilder
 } from './../../utils';
 
+import {
+    chartColors, state
+} from '../../config/config';
+
 class RangeController {
     constructor(params) {
         const rangePanel = document.createElement('div');
@@ -15,6 +19,7 @@ class RangeController {
 
         this.rangeBox = document.createElement('div');
         this.rangeBox.classList.add('range-box');
+        this.rangeBox.style.borderColor = chartColors.rangeBox[state.currentTheme];
 
         // выставляем стартовые позиции для диапазона
         this.currentCoords = {
@@ -24,8 +29,12 @@ class RangeController {
 
         this.rangeMarkerStart = range.cloneNode(true);
         this.rangeMarkerStart.classList.add('marker-start');
+        this.rangeMarkerStart.style.backgroundColor = chartColors.range[state.currentTheme];
+        this.rangeMarkerStart.style.borderColor = chartColors.rangeBox[state.currentTheme];
         this.rangeMarkerEnd = range.cloneNode(true);
         this.rangeMarkerEnd.classList.add('marker-end');
+        this.rangeMarkerEnd.style.backgroundColor = chartColors.range[state.currentTheme];
+        this.rangeMarkerEnd.style.borderColor = chartColors.rangeBox[state.currentTheme];
         // callback для графика
         this.onUpdate = params.onUpdate;
 
@@ -58,6 +67,14 @@ class RangeController {
         this.onUpdate(this.currentCoords)
     }
 
+    updateTheme() {
+        this.rangeMarkerStart.style.backgroundColor = chartColors.range[state.currentTheme];
+        this.rangeMarkerStart.style.borderColor = chartColors.rangeBox[state.currentTheme];
+        this.rangeMarkerEnd.style.backgroundColor = chartColors.range[state.currentTheme];
+        this.rangeMarkerEnd.style.borderColor = chartColors.rangeBox[state.currentTheme];
+        this.rangeBox.style.borderColor = chartColors.rangeBox[state.currentTheme];
+    }
+
     /**
      * Начало взаимодействие с блоком диапазона
      * 
@@ -76,7 +93,6 @@ class RangeController {
      * @param {Boolean} isBox - двигаем диапазон целиком
      */
     _onStartMoveMarkerPosition(eventStart, type, isBox) {
-        console.log(eventStart)
         const _onMoveMarkerMethod = (eventMove) => {
             this._onMarkerMove.call(this, eventMove, type)
         };

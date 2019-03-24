@@ -3,6 +3,11 @@ import {
     hexToRgbA
 } from './../../utils';
 
+import {
+    state,
+    chartColors
+} from './../../config/config';
+
 class Chart {
     constructor(params) {
         const canvas = document.createElement('canvas');
@@ -16,7 +21,7 @@ class Chart {
 
         this.ctx = canvas.getContext('2d');
 
-        this.lineColor = params.lineColor;
+        this.lineColor = chartColors.line[state.currentTheme];
         this.chartParams = {
             paddings: params.paddings
         }
@@ -28,6 +33,11 @@ class Chart {
         this._setOriginalChartState(params.data);
 
         this._index = 0;
+    }
+
+    updateTheme() {
+        this.clear();
+        this._draw();
     }
 
     /**

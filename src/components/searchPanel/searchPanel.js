@@ -40,10 +40,10 @@ class SearchPanel {
 
         this._onUpdate = params.onUpdate;
 
-        this.data.lines.forEach(item => {
+        this.filters = this.data.lines.map(item => {
             this._updateFilters(item.name, true);
 
-            new LineFilter({
+            return new LineFilter({
                 name: item.name,
                 color: item.color,
                 container: filterPanel,
@@ -64,6 +64,13 @@ class SearchPanel {
     init() {
         this._updateSearchChart();
         this.rangePanel.init();
+    }
+
+    updateTheme() {
+        this.filters.forEach(filter => {
+            filter.updateTheme();
+        });
+        this.rangePanel.updateTheme()
     }
 
     /**

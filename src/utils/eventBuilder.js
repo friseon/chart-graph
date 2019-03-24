@@ -16,20 +16,19 @@ const mouseEvents = {
     end: 'mouseup'
 };
 
-const _addEventListeners = (types, elem, callback) => {
+const _addEventListeners = (types, elem, callback, notPassive) => {
     types.split(' ').forEach(function (type) {
-        elem.addEventListener(type, callback);
+        elem.addEventListener(type, callback, { passive: !notPassive });
     }, this);
 }
 
-const addEventListener = (elem, event, callback) => {
+const addEventListener = (elem, event, callback, notPassive) => {
     if (window.PointerEvent) {
         //pointer Events
-        _addEventListeners(pointerEvents[event], elem, callback);
-        _addEventListeners('touchstart touchmove touchend', elem, function(event) {
-            // отключаем поведение для Touch Events
-            event.preventDefault();
-        });
+        _addEventListeners(pointerEvents[event], elem, callback, notPassive);
+        if (elem !== document) {
+            _addEventListeners('touchstart touchmove touchend', elem, (event) => { event.preventDefault()}, true);
+        }
     } else if (window.TouchEvent) {
         // touch Events
         _addEventListeners(touchEvents[event], elem, callback);
