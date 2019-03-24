@@ -1,7 +1,8 @@
 import './rangeController.scss';
 
 import {
-    debounce
+    debounce,
+    eventBuilder
 } from './../../utils';
 
 class RangeController {
@@ -48,9 +49,9 @@ class RangeController {
             right: containerParams.width
         };
 
-        this.rangeMarkerStart.addEventListener('mousedown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'start'));
-        this.rangeMarkerEnd.addEventListener('mousedown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'end'));
-        this.rangeBox.addEventListener('mousedown', (eventStart) => this._onStartMoveRangeBox(eventStart));
+        eventBuilder.addEventListener(this.rangeMarkerStart, 'start', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'start'));
+        eventBuilder.addEventListener(this.rangeMarkerEnd, 'start', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'end'));
+        eventBuilder.addEventListener(this.rangeBox, 'start', (eventStart) => this._onStartMoveRangeBox(eventStart));
 
         this._updateRangePositionForChartPoints();
         // callback для графика
@@ -80,16 +81,16 @@ class RangeController {
         };
 
         const _onStopMoveMarker = () => {
-            document.removeEventListener('mousemove', _onMoveMarkerMethod);
-            document.removeEventListener('mouseup', _onStopMoveMarker);
+            eventBuilder.removeEventListener(document, 'move', _onMoveMarkerMethod);
+            eventBuilder.removeEventListener(document, 'end', _onStopMoveMarker);
             this._updateRangePositionForChartPoints(isBox);
 
             // callback для графика
             this.onUpdate(this.currentCoords)
         }
 
-        document.addEventListener('mousemove', _onMoveMarkerMethod);
-        document.addEventListener('mouseup', _onStopMoveMarker);
+        eventBuilder.addEventListener(document, 'move', _onMoveMarkerMethod);
+        eventBuilder.addEventListener(document, 'end', _onStopMoveMarker);
 
         this.currentCoords[type] = eventStart.clientX - this.container.offsetLeft;
     }

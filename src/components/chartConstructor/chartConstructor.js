@@ -1,5 +1,6 @@
 import {
-    prepareData
+    prepareData,
+    eventBuilder
 } from '../../utils';
 
 import {
@@ -29,7 +30,7 @@ class ChartConstructor {
 
         this.data = prepareData(params.data);
 
-        this.detailsPanel.addEventListener('mousedown', this._onStartSearch.bind(this));
+        eventBuilder.addEventListener(this.detailsPanel, 'start', this._onStartSearch.bind(this));
 
         this.mainChart = new MainChart({
             idCanvas: 'main-chart',
@@ -114,14 +115,14 @@ class ChartConstructor {
         const _onMoveLineMethod = (eventMove) => this._onLineMove.call(this, eventMove);
 
         const _onStopMoveLine = (e) => {
-            document.removeEventListener('mousemove', _onMoveLineMethod);
-            document.removeEventListener('mouseup', _onStopMoveLine);
+            eventBuilder.removeEventListener(document, 'move', _onMoveLineMethod);
+            eventBuilder.removeEventListener(document, 'end', _onStopMoveLine);
 
             this._onLineMove(e)
         }
 
-        document.addEventListener('mousemove', _onMoveLineMethod);
-        document.addEventListener('mouseup', _onStopMoveLine);
+        eventBuilder.addEventListener(document, 'move', _onMoveLineMethod);
+        eventBuilder.addEventListener(document, 'end', _onStopMoveLine);
     }
 
     _onLineMove(e) {

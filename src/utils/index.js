@@ -6,6 +6,7 @@ import getDates from './getDates';
 import constants from './constants';
 import debounce from './debounce';
 import hexToRgbA from './hexToRgbA';
+import eventBuilder from './eventBuilder';
 
 export {
     prepareData,
@@ -15,5 +16,6 @@ export {
     getMin,
     constants,
     debounce,
-    hexToRgbA
+    hexToRgbA,
+    eventBuilder
 }
