@@ -168,6 +168,7 @@ class MainChart extends Chart {
         this._dateDeviders = [];
         const _currentDates = this.currentChartState.dates;
         const _datesLength = _currentDates.length - 1;
+        const minWidthDate = 60; // минимальная шрина для даты
         const _maxDatesAmount = 6;
         this._dateDevidersAmount = _datesLength;
         this._dateStep = this.currentChartState.step;
@@ -176,6 +177,11 @@ class MainChart extends Chart {
         if (_datesLength > _maxDatesAmount) {
             this._dateDevidersAmount = _maxDatesAmount;
             this._dateStep = this.width / (_maxDatesAmount - 1);
+        }
+
+        if (this._dateStep < minWidthDate) {
+            this._dateDevidersAmount = Math.floor(this.width / minWidthDate);
+            this._dateStep = this.width / (this._dateDevidersAmount - 1);
         }
 
         // выдёргиваем даты, которые будем отображать
