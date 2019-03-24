@@ -44,7 +44,7 @@ class SearchChart extends Chart {
                 return {
                     ...point,
                     steps: {
-                        y: isLineHidden ? -Math.round((currentY) / animationSpeed) : Math.round((newY - currentY) / animationSpeed)
+                        y: isLineHidden ? -Math.round(Math.max(1, currentY / animationSpeed)) : Math.round((newY - currentY) / animationSpeed)
                     },
                     x: Math.round(step * index),
                     y: isLineHidden ? (currentY / 2) : newY
@@ -65,18 +65,20 @@ class SearchChart extends Chart {
                 const currentLine = {...line};
                 const newLine = this.goalData[index];
 
-                if (!params.filters[currentLine.name]) {
-                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity > 1) {
-                        currentLine.opacity = .4;
-                    }
+                if (typeof currentLine.opacity === 'undefined') {
+                    currentLine.opacity = 1;
+                }
 
-                    currentLine.opacity = currentLine.opacity > 0 ? +currentLine.opacity.toFixed(2) - .05 : 0;
-                } else if (this.currentChartState.updatedFilter === currentLine.name) {
-                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity > 1) {
-                        currentLine.opacity = .4;
-                    }
+                if (!params.filters[currentLine.name] && currentLine.opacity > 0) {
+                    this._isStop = false;
 
-                    currentLine.opacity = currentLine.opacity <= 1 ? +currentLine.opacity.toFixed(2) + .05 : 1;
+                    currentLine.opacity = +(currentLine.opacity - .1).toFixed(2);
+                } else if (params.filters[currentLine.name] &&
+                    this.currentChartState.updatedFilter === currentLine.name &&
+                    currentLine.opacity < 1) {
+                    this._isStop = false;
+
+                    currentLine.opacity = +(currentLine.opacity + .1).toFixed(2);
                 }
 
                 currentLine.coords = currentLine.coords.map((item, index2) => {

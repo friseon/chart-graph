@@ -26,11 +26,10 @@ class ChartConstructor {
         this.detailsPanel = document.createElement('div');
         this.detailsPanel.classList.add('details-panel');
 
-        this._createPopup();
 
         this.data = prepareData(params.data);
 
-        this.detailsPanel.addEventListener('pointerdown', this._onStartSearch.bind(this));
+        this.detailsPanel.addEventListener('mousedown', this._onStartSearch.bind(this));
 
         this.mainChart = new MainChart({
             idCanvas: 'main-chart',
@@ -45,6 +44,7 @@ class ChartConstructor {
                 bottom: 50
             }
         });
+        this._createPopup();
 
         // TODO: в конфиг всё перенести
         this.width = params.width;
@@ -114,14 +114,14 @@ class ChartConstructor {
         const _onMoveLineMethod = (eventMove) => this._onLineMove.call(this, eventMove);
 
         const _onStopMoveLine = (e) => {
-            document.removeEventListener('pointermove', _onMoveLineMethod);
-            document.removeEventListener('pointerup', _onStopMoveLine);
+            document.removeEventListener('mousemove', _onMoveLineMethod);
+            document.removeEventListener('mouseup', _onStopMoveLine);
 
             this._onLineMove(e)
         }
 
-        document.addEventListener('pointermove', _onMoveLineMethod);
-        document.addEventListener('pointerup', _onStopMoveLine);
+        document.addEventListener('mousemove', _onMoveLineMethod);
+        document.addEventListener('mouseup', _onStopMoveLine);
     }
 
     _onLineMove(e) {
@@ -182,7 +182,7 @@ class ChartConstructor {
         this.detailsLine.classList.add('details-line');
         this.detailsLine.style.backgroundColor = chartColors.line.night;
         // TODO: config
-        this.detailsLine.style.bottom = 55 + 'px';
+        this.detailsLine.style.bottom = this.mainChart.chartParams.paddings.bottom + 5 + 'px';
 
         this.detailsPopup = document.createElement('div');
         this.detailsPopup.classList.add('details-popup');

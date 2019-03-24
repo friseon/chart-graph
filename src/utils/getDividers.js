@@ -7,7 +7,7 @@ const getDividers = (max, min) => {
         if (i === 1) {
             _deviders.push(min);
         } if (i === _devidersAmount) {
-            _deviders.push(Math.round(max * .95));
+            _deviders.push(Math.round(max * .98));
         } else {
             _deviders.push(min + Math.round(step) * i);
         }

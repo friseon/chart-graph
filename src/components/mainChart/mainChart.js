@@ -27,16 +27,20 @@ class MainChart extends Chart {
                 const currentLine = {...line};
                 const newLine = this.goalData[index];
 
-                if (!params.filters[currentLine.name]) {
-                    if (typeof currentLine.opacity === 'undefined' || currentLine.opacity >= 1) {
-                        currentLine.opacity = .4;
-                    }
-
-                    currentLine.opacity = currentLine.opacity > 0 ? +currentLine.opacity.toFixed(2) - .05 : 0;
-                } else if (this.currentChartState.updatedFilter === currentLine.name) {
-                    currentLine.opacity = currentLine.opacity <= 1 ? +currentLine.opacity.toFixed(2) + .05 : 1;
-                } else {
+                if (typeof currentLine.opacity === 'undefined') {
                     currentLine.opacity = 1;
+                }
+
+                if (!params.filters[currentLine.name] && currentLine.opacity > 0) {
+                    this._isStop = false;
+
+                    currentLine.opacity = +(currentLine.opacity - .1).toFixed(2);
+                } else if (params.filters[currentLine.name] &&
+                    this.currentChartState.updatedFilter === currentLine.name &&
+                    currentLine.opacity < 1) {
+                    this._isStop = false;
+
+                    currentLine.opacity = +(currentLine.opacity + .1).toFixed(2);
                 }
 
                 currentLine.coords = currentLine.coords.map((item, index2) => {
@@ -52,8 +56,8 @@ class MainChart extends Chart {
                     if (currentX !== newCoords.x || currentY !== newCoords.y) {
                         this._isStop = false;
 
-                        const isNearX = Math.abs(newCoords.x - currentX) <= 10;
-                        const isNearY = Math.abs(newCoords.y - currentY) <= 10;
+                        const isNearX = Math.abs(newCoords.x - currentX) <= 15;
+                        const isNearY = Math.abs(newCoords.y - currentY) <= 15;
 
                         return {
                             ...newLine.coords[index2],
@@ -128,7 +132,7 @@ class MainChart extends Chart {
                 return {
                     steps: {
                         x: Math.round((step * (index - params.start) - currentX) / animationSpeed),
-                        y: isLineHidden ? -Math.round((currentY) / animationSpeed) : Math.round((newY - currentY) / animationSpeed)
+                        y: isLineHidden ? -Math.round(Math.max(1, currentY / animationSpeed)) : Math.round((newY - currentY) / animationSpeed)
                     },
                     x: Math.round(step * (index - params.start)),
                     y: isLineHidden ? (currentY / 2) : newY
@@ -225,11 +229,12 @@ class MainChart extends Chart {
         this.currentChartState.deviders.forEach(devider => {
             const preparedValue = this.getYFromPointValue(devider);
 
-            this._startLine(0, preparedValue, this.lineColor, 1);
+            this._startLine(0, preparedValue, this.lineColor);
             this.ctx.font = '12px Arial';
             this.ctx.fillStyle = '#f5f5f5';
             this.ctx.fillText(devider, 5, preparedValue - 5);
-            this._drawLine(this.width, preparedValue);
+            this.ctx.lineTo(this.width, preparedValue);
+            this.ctx.stroke();
         });
     }
 }

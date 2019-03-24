@@ -48,9 +48,9 @@ class RangeController {
             right: containerParams.width
         };
 
-        this.rangeMarkerStart.addEventListener('pointerdown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'start'));
-        this.rangeMarkerEnd.addEventListener('pointerdown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'end'));
-        this.rangeBox.addEventListener('pointerdown', (eventStart) => this._onStartMoveRangeBox(eventStart));
+        this.rangeMarkerStart.addEventListener('mousedown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'start'));
+        this.rangeMarkerEnd.addEventListener('mousedown', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'end'));
+        this.rangeBox.addEventListener('mousedown', (eventStart) => this._onStartMoveRangeBox(eventStart));
 
         this._updateRangePositionForChartPoints();
         // callback для графика
@@ -80,16 +80,16 @@ class RangeController {
         };
 
         const _onStopMoveMarker = () => {
-            document.removeEventListener('pointermove', _onMoveMarkerMethod);
-            document.removeEventListener('pointerup', _onStopMoveMarker);
+            document.removeEventListener('mousemove', _onMoveMarkerMethod);
+            document.removeEventListener('mouseup', _onStopMoveMarker);
             this._updateRangePositionForChartPoints(isBox);
 
             // callback для графика
             this.onUpdate(this.currentCoords)
         }
 
-        document.addEventListener('pointermove', _onMoveMarkerMethod);
-        document.addEventListener('pointerup', _onStopMoveMarker);
+        document.addEventListener('mousemove', _onMoveMarkerMethod);
+        document.addEventListener('mouseup', _onStopMoveMarker);
 
         this.currentCoords[type] = eventStart.clientX - this.container.offsetLeft;
     }
@@ -162,7 +162,7 @@ class RangeController {
         debounce(() => this.onUpdate({
             start: this.rangeMarkerStart.offsetWidth - 8,
             end: this.rangeMarkerEnd.offsetLeft + 8
-        }), 100)()
+        }), 200)()
     }
 
     _onMarkerMove(e, type) {

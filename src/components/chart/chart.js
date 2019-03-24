@@ -102,11 +102,12 @@ class Chart {
         this.currentChartData.forEach(line => {
             line.coords.forEach((item, index) => {
                 if (index === 0) {
-                    this._startLine(item.x, item.y, hexToRgbA(line.color, line.opacity), item.lineWidth);
+                    this._startLine(item.x, item.y, hexToRgbA(line.color, line.opacity), 1.5);
                 } else {
-                    this._drawLine(item.x, item.y,);
+                    this.ctx.lineTo(item.x, item.y);
                 }
             });
+            this.ctx.stroke();
         });
     }
 
@@ -134,7 +135,6 @@ class Chart {
      */
     _drawLine(endX, endY) {
         this.ctx.lineTo(endX, endY);
-        this.ctx.stroke();
     }
 
     /**
