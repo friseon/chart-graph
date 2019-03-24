@@ -46,7 +46,7 @@ const removeEventListener = (elem, event, callback) => {
     } else if (window.TouchEvent) {
         // touch Events
         elem.removeEventListener(touchEvents[event], callback);
-    } else if (window.MouseEvent) {
+    } if (window.MouseEvent) {
         // mouse
         elem.removeEventListener(mouseEvents[event], callback);
     }

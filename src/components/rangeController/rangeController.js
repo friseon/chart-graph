@@ -76,6 +76,7 @@ class RangeController {
      * @param {Boolean} isBox - двигаем диапазон целиком
      */
     _onStartMoveMarkerPosition(eventStart, type, isBox) {
+        console.log(eventStart)
         const _onMoveMarkerMethod = (eventMove) => {
             this._onMarkerMove.call(this, eventMove, type)
         };
@@ -92,7 +93,7 @@ class RangeController {
         eventBuilder.addEventListener(document, 'move', _onMoveMarkerMethod);
         eventBuilder.addEventListener(document, 'end', _onStopMoveMarker);
 
-        this.currentCoords[type] = eventStart.clientX - this.container.offsetLeft;
+        this.currentCoords[type] = eventStart.pageX - this.container.offsetLeft;
     }
 
     _getMarkerNewPosition(shift, type) {
@@ -168,13 +169,13 @@ class RangeController {
 
     _onMarkerMove(e, type) {
         const coord = this.currentCoords[type];
-        const shift = coord + this.container.offsetLeft - e.clientX;
+        const shift = coord + this.container.offsetLeft - e.pageX;
 
         const newCoords = this._getMarkerNewPosition(shift, type);
 
         this._setMarkerPosition(Math.round(newCoords), type);
 
-        this.currentCoords[type] = e.clientX - this.container.offsetLeft;
+        this.currentCoords[type] = e.pageX - this.container.offsetLeft;
     }
 }
 

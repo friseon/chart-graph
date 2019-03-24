@@ -63,5 +63,6 @@
         transform: translateX(-50%) translateY(-50%);
         border: 2px solid;
         z-index: 100;
+        pointer-events: none;
     }
 }

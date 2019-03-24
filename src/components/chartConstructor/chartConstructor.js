@@ -129,7 +129,7 @@ class ChartConstructor {
         const delta = this.mainChart.currentChartState.step / 2;
 
         const currentValue = this.currentData.find((item) => {
-            const cursorX = e.clientX - this.detailsPanel.offsetLeft;
+            const cursorX = e.pageX - this.detailsPanel.offsetLeft;
             return cursorX > (item.x - delta) && cursorX <= (item.x + delta);
         });
 
@@ -148,7 +148,7 @@ class ChartConstructor {
                 document.getElementById(item.name + this._chartId).querySelector('.details-popup__line-value').textContent = item.value;
             });
 
-            this._setLinePosition(currentValue.x, e.offsetY);
+            this._setLinePosition(currentValue.x, e.layerY);
         }
     }
 
