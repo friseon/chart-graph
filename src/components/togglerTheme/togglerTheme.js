@@ -15,7 +15,7 @@ class TogglerTheme {
         filter.type = 'checkbox';
         filter.id = _id;
 
-        filterTitle.innerHTML = `Switch theme to ${filter.checked ? 'day' : 'night'}`;
+        filterTitle.innerHTML = `Switch to ${filter.checked ? 'Day' : 'Night'} Mode`;
 
         filterLabel.htmlFor = _id;
         filterLabel.appendChild(filter);
@@ -25,10 +25,10 @@ class TogglerTheme {
         filterLabel.addEventListener('change', () => {
             if (filter.checked) {
                 state.currentTheme = 'night';
-                filterTitle.innerHTML = `Switch theme to day`;
+                filterTitle.innerHTML = `Switch to Day Mode`;
             } else {
                 state.currentTheme = 'day';
-                filterTitle.innerHTML = `Switch theme to night`;
+                filterTitle.innerHTML = `Switch to Night Mode`;
             }
             params.onChange();
         })
