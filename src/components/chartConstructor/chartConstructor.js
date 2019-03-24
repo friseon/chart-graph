@@ -51,11 +51,7 @@ class ChartConstructor {
                 bottom: 50
             }
         });
-        this._createPopup();
-
-        // TODO: в конфиг всё перенести
-        this.width = params.width;
-        this.height = params.height;
+        this._createElementsForDetalization();
 
         this.container.appendChild(this.detailsPanel);
 
@@ -65,7 +61,7 @@ class ChartConstructor {
             width: params.width - 24,
             rangeHeight: Math.max(params.height / 4, 100),
             onUpdate: (params) => {
-                this._hidePopup();
+                this._hideDetalization();
                 this.mainChart._updateCurrentData(params, true);
                 this._prepareDetaisData({
                     dates: this.mainChart.currentChartState.dates,
@@ -98,8 +94,12 @@ class ChartConstructor {
         this.searchPanel.init();
     }
 
+    /**
+     * Готовим данные для отображения popup
+     * 
+     * @param {Onject} data 
+     */
     _prepareDetaisData(data) {
-        // предварительные данные, которые нужны для отображения popup
         const _items = data.dates.map(date => {
             return {
                 date,
@@ -134,6 +134,9 @@ class ChartConstructor {
         this.currentData = _items;
     }
 
+    /**
+     * Событие отображение popup
+     */
     _onStartSearch() {
         const _onMoveLineMethod = (eventMove) => this._onLineMove.call(this, eventMove);
 
@@ -148,17 +151,23 @@ class ChartConstructor {
         eventBuilder.addEventListener(document, 'end', _onStopMoveLine);
     }
 
+    /**
+     * Движение курсора на графике
+     * 
+     * @param {Event} e 
+     */
     _onLineMove(e) {
         const delta = this.mainChart.currentChartState.step / 2;
 
         const currentValue = this.currentData.find((item) => {
             const cursorX = e.pageX - this.detailsPanel.offsetLeft;
+
             return cursorX > (item.x - delta) && cursorX <= (item.x + delta);
         });
 
         if (currentValue) {
             if (this._popupHidden) {
-                this._showPopup();
+                this._showDetalization();
             }
 
             const date = currentValue.date.long;
@@ -171,24 +180,37 @@ class ChartConstructor {
                 document.getElementById(item.name + this._chartId).querySelector('.details-popup__line-value').textContent = item.value;
             });
 
-            this._setLinePosition(currentValue.x, e.layerY);
+            this._setLineAndPopupPosition(currentValue.x, e.layerY);
         }
     }
 
+    /**
+     * Отображение/перемещение маркеров
+     * 
+     * @param {String} name - имя графтка
+     * @param {Number} x 
+     * @param {Number} y 
+     */
     _setMarkerPosition(name, x, y) {
         document.getElementById('point-marker-' + name + this._chartId).style.left = x + 'px';
         document.getElementById('point-marker-' + name + this._chartId).style.top = y + 'px'
     }
 
-    _setLinePosition(x, y) {
-        if (x + this.detailsPopup.offsetWidth >= this.width) {
+    /**
+     * Перемещаем линию и popup
+     * 
+     * @param {Number} x 
+     * @param {Number} y 
+     */
+    _setLineAndPopupPosition(x, y) {
+        if (x + this.detailsPopup.offsetWidth >= this.mainChart.width) {
             this.detailsPopup.style.left = x - this.detailsPopup.offsetWidth - 18 + 'px';
         } else {
             this.detailsPopup.style.left = x + 'px';
         }
 
-        if (y > this.height) {
-            y = this.height;
+        if (y > this.mainChart.chartParams.paddings.bottom) {
+            y = this.mainChart.chartParams.paddings.bottom;
         }
 
         if (y < 0) {
@@ -196,15 +218,15 @@ class ChartConstructor {
         }
 
         this.detailsPopup.style.top = y + 'px';
-
         this.detailsLine.style.left = x + 'px';
     }
 
-    _createPopup() {
-        // TODO: привести к номальному виду popup
+    /**
+     * Создание элементов для отображениеинформации по точкам на графике
+     */
+    _createElementsForDetalization() {
         this.detailsLine = document.createElement('div');
         this.detailsLine.classList.add('details-line');
-        // TODO: config
         this.detailsLine.style.bottom = this.mainChart.chartParams.paddings.bottom + 5 + 'px';
 
         this.detailsPopup = document.createElement('div');
@@ -240,11 +262,17 @@ class ChartConstructor {
         this.detailsPanel.appendChild(this.detailsPopup);
     }
 
+    /**
+     * Очистка popup
+     */
     _clearPopupDetails() {
         this.detailsPopupInfo.innerHTML = '';
     }
 
-    _hidePopup() {
+    /**
+     * Скрытие эелментов детализации
+     */
+    _hideDetalization() {
         this._popupHidden = true;
         this._clearPopupDetails();
         this.detailsPopup.style.display = 'none';
@@ -254,7 +282,10 @@ class ChartConstructor {
         });
     }
 
-    _showPopup() {
+    /**
+     * Показ элементов детализации
+     */
+    _showDetalization() {
         this._popupHidden = false;
         this.detailsPopup.style.display = 'block';
         this.detailsLine.style.display = 'block';

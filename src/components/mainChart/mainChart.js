@@ -148,8 +148,8 @@ class MainChart extends Chart {
             return currentLine;
         });
 
-        this._updateDateDeviders();
-        this.currentChartState.deviders = getDividers(this.currentChartState.max, this.currentChartState.min);
+        this._updateDateDividers();
+        this.currentChartState.dividers = getDividers(this.currentChartState.max, this.currentChartState.min);
 
         this.currentChartState.cuttedData = this.goalData
             .map(line => {
@@ -164,36 +164,36 @@ class MainChart extends Chart {
         this.redraw(params);
     }
 
-    _updateDateDeviders() {
-        this._dateDeviders = [];
+    _updateDateDividers() {
+        this._dateDividers = [];
         const _currentDates = this.currentChartState.dates;
         const _datesLength = _currentDates.length - 1;
         const minWidthDate = 60; // минимальная шрина для даты
         const _maxDatesAmount = 6;
-        this._dateDevidersAmount = _datesLength;
+        this._dateDividersAmount = _datesLength;
         this._dateStep = this.currentChartState.step;
 
         // ограничение по кол-ву отображаемых дат
         if (_datesLength > _maxDatesAmount) {
-            this._dateDevidersAmount = _maxDatesAmount;
+            this._dateDividersAmount = _maxDatesAmount;
             this._dateStep = this.width / (_maxDatesAmount - 1);
         }
 
         if (this._dateStep < minWidthDate) {
-            this._dateDevidersAmount = Math.floor(this.width / minWidthDate);
-            this._dateStep = this.width / (this._dateDevidersAmount - 1);
+            this._dateDividersAmount = Math.floor(this.width / minWidthDate);
+            this._dateStep = this.width / (this._dateDividersAmount - 1);
         }
 
         // выдёргиваем даты, которые будем отображать
-        for (let i = 0; i < this. _dateDevidersAmount; i++) {
-            const dateIndex = Math.round(_datesLength / (this._dateDevidersAmount - 1)) * i;
+        for (let i = 0; i < this. _dateDividersAmount; i++) {
+            const dateIndex = Math.round(_datesLength / (this._dateDividersAmount - 1)) * i;
 
             
-            if (i === this._dateDevidersAmount - 1) {
+            if (i === this._dateDividersAmount - 1) {
                 dateIndex= _datesLength;
             }
 
-            this._dateDeviders.push(_currentDates[dateIndex]);
+            this._dateDividers.push(_currentDates[dateIndex]);
         }
     }
 
@@ -208,8 +208,8 @@ class MainChart extends Chart {
      * Рисование горизонтальных разделителей
      */
     _drawDates() {
-        this._dateDeviders.forEach((devider, index) => {
-            const date = devider.short;
+        this._dateDividers.forEach((divider, index) => {
+            const date = divider.short;
             let x = index * this._dateStep;
             const y = this.height;
 
@@ -219,7 +219,7 @@ class MainChart extends Chart {
             if (index === 0) {
                 x += 5;
                 this.ctx.textAlign = 'start';
-            } else if (index === this._dateDevidersAmount - 1) {
+            } else if (index === this._dateDividersAmount - 1) {
                 x -= 5;
                 this.ctx.textAlign = 'end';
             }
@@ -238,13 +238,13 @@ class MainChart extends Chart {
      * Рисование горизонтальных разделителей
      */
     _drawDividers() {
-        this.currentChartState.deviders.forEach(devider => {
-            const preparedValue = this.getYFromPointValue(devider);
+        this.currentChartState.dividers.forEach(divider => {
+            const preparedValue = this.getYFromPointValue(divider);
 
             this._startLine(0, preparedValue, chartColors.line[state.currentTheme]);
             this.ctx.font = '12px Arial';
             this.ctx.fillStyle = chartColors.text[state.currentTheme];
-            this.ctx.fillText(devider, 5, preparedValue - 5);
+            this.ctx.fillText(divider, 5, preparedValue - 5);
             this.ctx.lineTo(this.width, preparedValue);
             this.ctx.stroke();
         });

@@ -1,19 +1,19 @@
 const getDividers = (max, min) => {
-    const _deviders = [];
-    const _devidersAmount = 4;
-    const step = (max - min) / _devidersAmount;
+    const _dividers = [];
+    const _dividersAmount = 4;
+    const step = (max - min) / _dividersAmount;
 
-    for (let i = 1; i <= _devidersAmount; i++) {
+    for (let i = 1; i <= _dividersAmount; i++) {
         if (i === 1) {
-            _deviders.push(min);
-        } if (i === _devidersAmount) {
-            _deviders.push(Math.round(max * .98));
+            _dividers.push(min);
+        } if (i === _dividersAmount) {
+            _dividers.push(Math.round(max * .98));
         } else {
-            _deviders.push(min + Math.round(step) * i);
+            _dividers.push(min + Math.round(step) * i);
         }
     }
 
-    return _deviders.sort((a, b) => (a - b));
+    return _dividers.sort((a, b) => (a - b));
 };
 
 export default getDividers;
