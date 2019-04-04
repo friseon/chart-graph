@@ -78,14 +78,14 @@ class SearchPanel {
      * 
      * @param {*} range 
      */
-    _calcRange(range) {
+    _calcRange(range, isFirst) {
         const length = this.data.dates.length - 1;
         const prop = length / this.width;
 
         this.startIndex = Math.round(prop * range.start);
         this.endIndex = Math.round(prop * range.end) + 1;
 
-        this._updateMainChart();
+        this._updateMainChart(isFirst);
     }
 
     /**
@@ -126,8 +126,8 @@ class SearchPanel {
         this.searchChart._updateCurrentData(this._getFilteredData('search'));
     }
 
-    _updateMainChart() {
-        this._onUpdate(this._getFilteredData('main'));
+    _updateMainChart(isTrue) {
+        this._onUpdate(this._getFilteredData('main'), isTrue);
     }
 }
 

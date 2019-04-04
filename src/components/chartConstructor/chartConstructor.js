@@ -37,7 +37,7 @@ class ChartConstructor {
 
         this.data = prepareData(params.data);
 
-        eventBuilder.addEventListener(this.detailsPanel, 'start', this._onStartSearch.bind(this));
+        eventBuilder.addEventListener(this.detailsPanel, 'chartstart', this._onStartSearch.bind(this));
 
         this.mainChart = new MainChart({
             idCanvas: 'main-chart',
@@ -60,9 +60,9 @@ class ChartConstructor {
             container: this.container,
             width: params.width - 24,
             rangeHeight: Math.max(params.height / 4, 100),
-            onUpdate: (params) => {
+            onUpdate: (params, isFirst) => {
                 this._hideDetalization();
-                this.mainChart._updateCurrentData(params, true);
+                this.mainChart._updateCurrentData(params, isFirst);
                 this._prepareDetaisData({
                     dates: this.mainChart.currentChartState.dates,
                     lines: this.mainChart.currentChartState.cuttedData
@@ -81,7 +81,8 @@ class ChartConstructor {
                 this.container.style.color = chartColors.text2[state.currentTheme];
                 this.detailsPopup.style.backgroundColor = chartColors.main[state.currentTheme];
                 this.detailsLine.style.backgroundColor = chartColors.line[state.currentTheme];
-                document.querySelectorAll('.' + Array.from(this.pointMarker.classList).join('. ')).forEach(marker => {
+
+                this.container.querySelectorAll('.' + Array.from(this.pointMarker.classList).join('. ')).forEach(marker => {
                     marker.style.backgroundColor = chartColors.main[state.currentTheme];
                 })
             }
@@ -115,6 +116,7 @@ class ChartConstructor {
             const pointMarker = this.pointMarker.cloneNode(true);
             pointMarker.style.borderColor = line.color;
             pointMarker.id = 'point-marker-' + line.name + this._chartId;
+            pointMarker.style.backgroundColor = chartColors.main[state.currentTheme]
 
             this.detailsPanel.appendChild(pointMarker);
             this.detailsPopup.querySelector('.details-popup__info').appendChild(item);
@@ -142,13 +144,13 @@ class ChartConstructor {
 
         const _onStopMoveLine = (e) => {
             eventBuilder.removeEventListener(this.detailsPanel, 'move', _onMoveLineMethod);
-            eventBuilder.removeEventListener(document, 'end', _onStopMoveLine);
+            eventBuilder.removeEventListener(document, 'chartend', _onStopMoveLine);
 
             this._onLineMove(e)
         }
 
         eventBuilder.addEventListener(this.detailsPanel, 'move', _onMoveLineMethod);
-        eventBuilder.addEventListener(document, 'end', _onStopMoveLine);
+        eventBuilder.addEventListener(document, 'chartend', _onStopMoveLine);
     }
 
     /**
@@ -209,8 +211,8 @@ class ChartConstructor {
             this.detailsPopup.style.left = x + 'px';
         }
 
-        if (y > this.mainChart.chartParams.paddings.bottom) {
-            y = this.mainChart.chartParams.paddings.bottom;
+        if (y > this.mainChart.height - this.mainChart.chartParams.paddings.bottom - this.detailsPopup.offsetHeight) {
+            y = this.mainChart.height - this.mainChart.chartParams.paddings.bottom - this.detailsPopup.offsetHeight;
         }
 
         if (y < 0) {

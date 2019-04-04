@@ -64,7 +64,7 @@ class RangeController {
 
         this._updateRangePositionForChartPoints();
         // callback для графика
-        this.onUpdate(this.currentCoords)
+        this.onUpdate(this.currentCoords, true)
     }
 
     updateTheme() {
@@ -94,7 +94,7 @@ class RangeController {
      */
     _onStartMoveMarkerPosition(eventStart, type, isBox) {
         const _onMoveMarkerMethod = (eventMove) => {
-            this._onMarkerMove.call(this, eventMove, type)
+            this._onMarkerMove.call(this, eventMove, type, isBox)
         };
 
         const _onStopMoveMarker = () => {
@@ -179,10 +179,10 @@ class RangeController {
         debounce(() => this.onUpdate({
             start: this.rangeMarkerStart.offsetWidth - 8,
             end: this.rangeMarkerEnd.offsetLeft + 8
-        }), 200)()
+        }), 100)()
     }
 
-    _onMarkerMove(e, type) {
+    _onMarkerMove(e, type, isBox) {
         const coord = this.currentCoords[type];
         const shift = coord + this.container.offsetLeft - e.pageX;
 
@@ -190,7 +190,7 @@ class RangeController {
 
         this._setMarkerPosition(Math.round(newCoords), type);
 
-        this.currentCoords[type] = e.pageX - this.container.offsetLeft;
+        this.currentCoords[type] = isBox ? e.pageX - this.container.offsetLeft : newCoords;
     }
 }
 
