@@ -4,6 +4,10 @@ import {
     RangeController
 } from './../index';
 
+import {
+    throttle
+} from './../../utils';
+
 import './searchPanel.scss';
 
 class SearchPanel {
@@ -38,7 +42,7 @@ class SearchPanel {
             container: this.rangePanel.container
         });
 
-        this._onUpdate = params.onUpdate;
+        this._onUpdate = throttle(params.onUpdate, 300);
 
         this.filters = this.data.lines.map(item => {
             this._updateFilters(item.name, true);
@@ -100,34 +104,21 @@ class SearchPanel {
 
     /**
      * Фильтруем данные для графика
-     * 
-     * @param {String} type - тип графика
      */
-    _getFilteredData(type) {
-        let dates = this.data.dates;
-        let start = this.startIndex;
-
-        if (Number(start) <= 0) {
-            start = 0;
-        }
-
-        if (type === 'main') {
-            dates = dates.slice(start, this.endIndex);
-        }
-
+    _getFilteredData() {
         return {
             filters: this._state.filters,
-            start,
+            start: this.startIndex,
             end: this.endIndex - 1
         };
     }
 
     _updateSearchChart() {
-        this.searchChart._updateCurrentData(this._getFilteredData('search'));
+        this.searchChart.updateCurrentData(this._getFilteredData());
     }
 
     _updateMainChart(isTrue) {
-        this._onUpdate(this._getFilteredData('main'), isTrue);
+        this._onUpdate(this._getFilteredData(), isTrue);
     }
 }
 

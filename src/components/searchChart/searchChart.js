@@ -6,11 +6,7 @@ import {
 } from './../../utils';
 
 class SearchChart extends Chart {
-    getYFromPointValue(val) {
-        return this.height - this.height / this.currentChartState.max * val;
-    }
-
-    _updateCurrentData(params) {
+    updateCurrentData(params) {
         this._isStop = true;
         cancelAnimationFrame(this._reqId);
 
@@ -29,6 +25,7 @@ class SearchChart extends Chart {
             filters: {...params.filters},
             max,
             min,
+            kY: (-this._bottom) / (max - min),
             step
         }
 
@@ -72,13 +69,13 @@ class SearchChart extends Chart {
                 if (!params.filters[currentLine.name] && currentLine.opacity > 0) {
                     this._isStop = false;
 
-                    currentLine.opacity = +(currentLine.opacity - .1).toFixed(2);
+                    currentLine.opacity = currentLine.opacity - .1;
                 } else if (params.filters[currentLine.name] &&
                     this.currentChartState.updatedFilter === currentLine.name &&
                     currentLine.opacity < 1) {
                     this._isStop = false;
 
-                    currentLine.opacity = +(currentLine.opacity + .1).toFixed(2);
+                    currentLine.opacity = currentLine.opacity + .1;
                 }
 
                 currentLine.coords = currentLine.coords.map((item, index2) => {
@@ -92,7 +89,7 @@ class SearchChart extends Chart {
                     if (currentY !== newCoords.y) {
                         this._isStop = false;
 
-                        const isNearY = Math.abs(newCoords.y - currentY) <= 5;
+                        const isNearY = Math.abs(newCoords.y - currentY) <= 15;
 
                         return {
                             ...newLine.coords[index2],

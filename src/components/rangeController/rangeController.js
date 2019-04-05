@@ -1,7 +1,6 @@
 import './rangeController.scss';
 
 import {
-    debounce,
     eventBuilder
 } from './../../utils';
 
@@ -50,12 +49,10 @@ class RangeController {
     }
 
     init() {
-        const containerParams = this.container.getBoundingClientRect();
-
         // куда нельзя выходить маркерам диапазона
         this.limits = {
             left: 0,
-            right: containerParams.width
+            right: this.container.offsetWidth
         };
 
         eventBuilder.addEventListener(this.rangeMarkerStart, 'start', (eventStart) => this._onStartMoveMarkerPosition(eventStart, 'start'));
@@ -119,8 +116,7 @@ class RangeController {
         if (type === 'start' && newCoords > this.rangeMarkerEnd.offsetLeft - 20) {
             // не двигаем начальный маркер дальше конечного
             newCoords = this.rangeMarkerEnd.offsetLeft - 20;
-        }
-        if (type === 'end' && newCoords < this.rangeMarkerStart.offsetWidth + 20) {
+        } else if (type === 'end' && newCoords < this.rangeMarkerStart.offsetWidth + 20) {
             // не двигаем конечный маркер дальше начального
             newCoords = this.rangeMarkerStart.offsetWidth + 20;
         }
@@ -128,8 +124,7 @@ class RangeController {
         // не выходим за границы графика
         if (newCoords > this.limits.right - 8) {
             newCoords = this.limits.right - 8;
-        }
-        if (newCoords < this.limits.left) {
+        } else if (newCoords < this.limits.left) {
             newCoords = this.limits.left;
         }
 
@@ -176,10 +171,10 @@ class RangeController {
         this.rangeBox.style.left = this.rangeMarkerStart.offsetWidth + 'px';
         this.rangeBox.style.right = this.rangeMarkerEnd.offsetWidth + 'px';
 
-        debounce(() => this.onUpdate({
+        this.onUpdate({
             start: this.rangeMarkerStart.offsetWidth - 8,
             end: this.rangeMarkerEnd.offsetLeft + 8
-        }), 100)()
+        });
     }
 
     _onMarkerMove(e, type, isBox) {

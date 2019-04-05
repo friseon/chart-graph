@@ -1,5 +1,6 @@
 import {
     getMax,
+    getMin,
     hexToRgbA
 } from './../../utils';
 
@@ -20,11 +21,13 @@ class Chart {
         this.height = canvas.height = params.height || 600;
 
         this.ctx = canvas.getContext('2d');
+        this.ctx.lineJoin = this.ctx.lineCap = 'round';
 
         this.lineColor = chartColors.line[state.currentTheme];
         this.chartParams = {
             paddings: params.paddings
         }
+        this._bottom = this.height;
 
         if (params.paddings) {
             this._bottom = this.height - params.paddings.bottom || 0;
@@ -41,18 +44,32 @@ class Chart {
     }
 
     /**
+     * Перевод значения в данных на отображение в графике
+     * 
+     * @param {Number} val – значение в данных
+     */
+    getYFromPointValue(val) {
+        const result = this._bottom + (val - this.currentChartState.min) * this.currentChartState.kY;
+
+        return result;
+    }
+
+    /**
      * Подготовка данных
      * 
      * @param {Array} data – сырые данные
      */
     _setOriginalChartState(data) {
         const max = getMax(data.lines);
+        const min = getMin(data.lines);
         const step = this.width / (data.dates.length - 1);
 
         this.originalChartState = {
             dates: data.dates,
             max,
-            step
+            min,
+            step,
+            kY: (-this._bottom) / (max - min),
         };
         this.currentChartState = {...this.originalChartState};
         this.currentChartData = this._setCoords(data.lines, step);
@@ -60,6 +77,8 @@ class Chart {
 
     _setCoords(lines, step) {
         return lines.map(line => {
+            line.opacity = 1;
+
             line.coords = line.data.map((point, index) => {
                 return {
                     x: step * index,
@@ -88,7 +107,8 @@ class Chart {
         Object.keys(params.filters).forEach(filterName => {
             if (this.currentChartState.filters[filterName] !== params.filters[filterName]) {
                 updatedFilter = filterName;
-                return
+
+                return;
             }
         });
 
@@ -96,8 +116,8 @@ class Chart {
     }
 
     redraw(params) {
-        this._updatingChart(params);
         this.clear();
+        this._updatingChart(params);
         this._draw();
 
         if (!this._isStop) {
@@ -131,7 +151,6 @@ class Chart {
      */
     _startLine(startX, startY, color, lineWidth = 1) {
         this.ctx.beginPath();
-        this.ctx.lineJoin = this.ctx.lineCap = 'round';
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = lineWidth;
         this.ctx.moveTo(startX, startY);

@@ -37,8 +37,6 @@ class ChartConstructor {
 
         this.data = prepareData(params.data);
 
-        eventBuilder.addEventListener(this.detailsPanel, 'chartstart', this._onStartSearch.bind(this));
-
         this.mainChart = new MainChart({
             idCanvas: 'main-chart',
             data: this.data,
@@ -62,7 +60,7 @@ class ChartConstructor {
             rangeHeight: Math.max(params.height / 4, 100),
             onUpdate: (params, isFirst) => {
                 this._hideDetalization();
-                this.mainChart._updateCurrentData(params, isFirst);
+                this.mainChart.updateCurrentData(params, isFirst);
                 this._prepareDetaisData({
                     dates: this.mainChart.currentChartState.dates,
                     lines: this.mainChart.currentChartState.cuttedData
@@ -93,6 +91,8 @@ class ChartConstructor {
 
     init() {
         this.searchPanel.init();
+
+        eventBuilder.addEventListener(this.detailsPanel, 'chartstart', this._onStartSearch.bind(this));
     }
 
     /**
@@ -110,10 +110,11 @@ class ChartConstructor {
 
         data.lines.forEach(line => {
             const item = this.popupLineDetails.cloneNode(true);
+            const pointMarker = this.pointMarker.cloneNode(true);
+
             item.style.color = line.color;
             item.id = line.name + this._chartId;
 
-            const pointMarker = this.pointMarker.cloneNode(true);
             pointMarker.style.borderColor = line.color;
             pointMarker.id = 'point-marker-' + line.name + this._chartId;
             pointMarker.style.backgroundColor = chartColors.main[state.currentTheme]

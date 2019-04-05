@@ -6,7 +6,7 @@ import './style.scss';
 
 import prod_data from './data/chart_data.json';
 
-prod_data.forEach(data => {
+prod_data.slice().forEach(data => {
     const chart = new ChartConstructor({
         idCanvas: "main-chart",
         data,

@@ -12,49 +12,32 @@ import {
 import Chart from '../chart/chart';
 
 class MainChart extends Chart {
-    /**
-     * Перевод значения в данных на отображение в графике
-     * 
-     * @param {Number} val – значение в данных
-     */
-    getYFromPointValue(val) {
-        const bottom = this.height - this.chartParams.paddings.bottom;
-        const k = (this.chartParams.paddings.top - bottom) / (this.currentChartState.max - this.currentChartState.min);
-        const result = bottom + (val - this.currentChartState.min) * k;
-
-        return Math.round(result);
-    }
-
     _updatingChart(params) {
         this._isStop = true;
 
         this.currentChartData = this.currentChartData
             .map((line, index) => {
                 const currentLine = {...line};
-                const newLine = this.goalData[index];
-
-                if (typeof currentLine.opacity === 'undefined') {
-                    currentLine.opacity = 1;
-                }
+                const newLineCoords = this.goalData[index].coords;
 
                 if (!params.filters[currentLine.name] && currentLine.opacity > 0) {
                     this._isStop = false;
 
-                    currentLine.opacity = +(currentLine.opacity - .1).toFixed(2);
+                    currentLine.opacity = currentLine.opacity - .1;
                 } else if (params.filters[currentLine.name] &&
                     this.currentChartState.updatedFilter === currentLine.name &&
                     currentLine.opacity < 1) {
                     this._isStop = false;
 
-                    currentLine.opacity = +(currentLine.opacity + .1).toFixed(2);
+                    currentLine.opacity = currentLine.opacity + .1;
                 }
 
                 currentLine.coords = currentLine.coords.map((item, index2) => {
                     const currentCoords = {...item};
                     const newCoords = {
-                        ...newLine.coords[index2],
-                        x: newLine.coords[index2].x,
-                        y: newLine.coords[index2].y
+                        ...newLineCoords[index2],
+                        x: newLineCoords[index2].x,
+                        y: newLineCoords[index2].y
                     };
                     const currentY = currentCoords.y;
                     const currentX = currentCoords.x;
@@ -66,7 +49,7 @@ class MainChart extends Chart {
                         const isNearY = Math.abs(newCoords.y - currentY) <= 15;
 
                         return {
-                            ...newLine.coords[index2],
+                            ...newLineCoords[index2],
                             y: isNearY ? newCoords.y : currentY + newCoords.steps.y,
                             x: isNearX ? newCoords.x : currentX + newCoords.steps.x
                         };
@@ -85,18 +68,22 @@ class MainChart extends Chart {
      * @param {Object} params 
      * @param {Boolean} isFirst – отображение при загрузке
      */
-    _updateCurrentData(params, isFirst) {
+    updateCurrentData(params, isFirst) {
         this._isStop = true;
         cancelAnimationFrame(this._reqId);
 
         const step = this.width / (params.end - params.start);
+        // при первом перестроении (загрузке) отображаем графики сразу, без анимации
         const animationSpeed = isFirst ? 1 : 20;
+        const max = getMax(this.currentChartData, params);
+        const min = getMin(this.currentChartData, params);
 
         this.currentChartState = {
             ...this.originalChartState,
             dates: this.originalChartState.dates.slice(params.start, params.end + 1),
-            max: getMax(this.currentChartData, params),
-            min: getMin(this.currentChartData, params),
+            max,
+            min,
+            kY: (this.chartParams.paddings.top - this._bottom) / (max - min),
             step,
             start: params.start,
             end: params.end,
@@ -112,9 +99,9 @@ class MainChart extends Chart {
 
             currentLine.coords = line.data.map((point, index) => {
                 const currentCoords = {...currentLine.coords[index]};
-                const newY = this.getYFromPointValue(point);
                 const currentX = currentCoords.x;
                 const currentY = currentCoords.y;
+                let newY = 0;
 
                 if (!isLineHidden && index > params.end) {
                     return {
@@ -138,12 +125,14 @@ class MainChart extends Chart {
                     }
                 }
 
+                newY = this.getYFromPointValue(point);
+
                 return {
                     steps: {
                         x: Math.round((step * (index - params.start) - currentX) / animationSpeed),
                         y: isLineHidden ? -Math.round(Math.max(1, currentY / animationSpeed)) : Math.round((newY - currentY) / animationSpeed)
                     },
-                    x: Math.round(step * (index - params.start)),
+                    x: step * (index - params.start),
                     y: isLineHidden ? (currentY / 2) : newY
                 }
             });
