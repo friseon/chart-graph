@@ -12,6 +12,8 @@ import './searchPanel.scss';
 
 class SearchPanel {
     constructor(params) {
+        var fragment = document.createDocumentFragment();
+
         this._state = {
             filters: {}
         };
@@ -42,7 +44,7 @@ class SearchPanel {
             container: this.rangePanel.container
         });
 
-        this._onUpdate = throttle(params.onUpdate, 300);
+        this._onUpdate = throttle(params.onUpdate, 100);
 
         this.filters = this.data.lines.map(item => {
             this._updateFilters(item.name, true);
@@ -59,8 +61,9 @@ class SearchPanel {
             })
         });
 
-        this.panelContainer.appendChild(this.rangePanel.container);
-        this.panelContainer.appendChild(filterPanel);
+        fragment.appendChild(this.rangePanel.container);
+        fragment.appendChild(filterPanel);
+        this.panelContainer.appendChild(fragment);
 
         params.container.appendChild(this.panelContainer);
     }

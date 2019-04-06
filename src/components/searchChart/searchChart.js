@@ -1,8 +1,7 @@
 import Chart from '../chart/chart.js';
 
 import {
-    getMax,
-    getMin
+    getMinMax
 } from './../../utils';
 
 class SearchChart extends Chart {
@@ -10,12 +9,10 @@ class SearchChart extends Chart {
         this._isStop = true;
         cancelAnimationFrame(this._reqId);
 
-        const max = getMax(this.currentChartData, {
+        const minmax = getMinMax(this.currentChartData, {
             filters: params.filters
         });
-        const min = getMin(this.currentChartData, {
-            filters: params.filters
-        });
+
         const step = this.width / (this.currentChartState.dates.length - 1);
         const animationSpeed = 20;
 
@@ -23,9 +20,9 @@ class SearchChart extends Chart {
             ...this.currentChartState,
             updatedFilter: this._getUpdatedFilter(params),
             filters: {...params.filters},
-            max,
-            min,
-            kY: (-this._bottom) / (max - min),
+            max: minmax.max,
+            min: minmax.min,
+            kY: (-this._bottom) / (minmax.max - minmax.min),
             step
         }
 
@@ -43,7 +40,7 @@ class SearchChart extends Chart {
                     steps: {
                         y: isLineHidden ? -Math.round(Math.max(1, currentY / animationSpeed)) : Math.round((newY - currentY) / animationSpeed)
                     },
-                    x: Math.round(step * index),
+                    x: point.x || step * index,
                     y: isLineHidden ? (currentY / 2) : newY
                 }
             });

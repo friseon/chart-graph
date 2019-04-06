@@ -10,6 +10,7 @@ import {
 
 class RangeController {
     constructor(params) {
+        const fragment = document.createDocumentFragment();
         const rangePanel = document.createElement('div');
         rangePanel.classList.add('range-panel');
 
@@ -37,9 +38,10 @@ class RangeController {
         // callback для графика
         this.onUpdate = params.onUpdate;
 
-        rangePanel.appendChild(this.rangeMarkerStart);
-        rangePanel.appendChild(this.rangeBox);
-        rangePanel.appendChild(this.rangeMarkerEnd);
+        fragment.appendChild(this.rangeMarkerStart);
+        fragment.appendChild(this.rangeBox);
+        fragment.appendChild(this.rangeMarkerEnd);
+        rangePanel.appendChild(fragment);
 
         params.container.appendChild(rangePanel);
 

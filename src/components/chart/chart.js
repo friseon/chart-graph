@@ -1,6 +1,5 @@
 import {
-    getMax,
-    getMin,
+    getMinMax,
     hexToRgbA
 } from './../../utils';
 
@@ -60,16 +59,15 @@ class Chart {
      * @param {Array} data – сырые данные
      */
     _setOriginalChartState(data) {
-        const max = getMax(data.lines);
-        const min = getMin(data.lines);
+        const minmax = getMinMax(data.lines);
         const step = this.width / (data.dates.length - 1);
 
         this.originalChartState = {
             dates: data.dates,
-            max,
-            min,
+            max: minmax.max,
+            min: minmax.min,
             step,
-            kY: (-this._bottom) / (max - min),
+            kY: (-this._bottom) / (minmax.max - minmax.min),
         };
         this.currentChartState = {...this.originalChartState};
         this.currentChartData = this._setCoords(data.lines, step);

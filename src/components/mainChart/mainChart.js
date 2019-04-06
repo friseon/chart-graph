@@ -1,7 +1,6 @@
 import {
     getDividers,
-    getMax,
-    getMin
+    getMinMax
 } from './../../utils';
 
 import {
@@ -74,16 +73,15 @@ class MainChart extends Chart {
 
         const step = this.width / (params.end - params.start);
         // при первом перестроении (загрузке) отображаем графики сразу, без анимации
-        const animationSpeed = isFirst ? 1 : 20;
-        const max = getMax(this.currentChartData, params);
-        const min = getMin(this.currentChartData, params);
+        const animationSpeed = isFirst ? 1 : 10;
+        const minmax = getMinMax(this.currentChartData, params);
 
         this.currentChartState = {
             ...this.originalChartState,
             dates: this.originalChartState.dates.slice(params.start, params.end + 1),
-            max,
-            min,
-            kY: (this.chartParams.paddings.top - this._bottom) / (max - min),
+            max: minmax.max,
+            min: minmax.min,
+            kY: (this.chartParams.paddings.top - this._bottom) / (minmax.max - minmax.min),
             step,
             start: params.start,
             end: params.end,
@@ -93,43 +91,17 @@ class MainChart extends Chart {
 
         this.goalData = this.currentChartData.map(line => {
             const currentLine = {...line};
-            const endPointValue = this.getYFromPointValue(line.data[params.end]);
-            const startPointValue = this.getYFromPointValue(line.data[params.start]);
             const isLineHidden = !params.filters[currentLine.name];
 
             currentLine.coords = line.data.map((point, index) => {
                 const currentCoords = {...currentLine.coords[index]};
                 const currentX = currentCoords.x;
                 const currentY = currentCoords.y;
-                let newY = 0;
-
-                if (!isLineHidden && index > params.end) {
-                    return {
-                        steps: {
-                            x: Math.round((this.width - currentX) / animationSpeed),
-                            y: Math.round((endPointValue - currentY) / animationSpeed)
-                        },
-                        x: this.width,
-                        y: endPointValue
-                    }
-                }
-
-                if (!isLineHidden && index < params.start) {
-                    return {
-                        steps: {
-                            x: -Math.round(currentX / animationSpeed),
-                            y: Math.round((startPointValue - currentY) / animationSpeed)
-                        },
-                        x: 0,
-                        y: startPointValue
-                    }
-                }
-
-                newY = this.getYFromPointValue(point);
+                const newY = this.getYFromPointValue(point);
 
                 return {
                     steps: {
-                        x: Math.round((step * (index - params.start) - currentX) / animationSpeed),
+                        x: (step * (index - params.start) - currentX) / animationSpeed,
                         y: isLineHidden ? -Math.round(Math.max(1, currentY / animationSpeed)) : Math.round((newY - currentY) / animationSpeed)
                     },
                     x: step * (index - params.start),
@@ -141,17 +113,19 @@ class MainChart extends Chart {
         });
 
         this._updateDateDividers();
-        this.currentChartState.dividers = getDividers(this.currentChartState.max, this.currentChartState.min);
+        this.currentChartState.dividers = getDividers(minmax.max, minmax.min);
 
         this.currentChartState.cuttedData = this.goalData
-            .map(line => {
-                return {
-                    ...line,
-                    coords: line.coords.slice(params.start, params.end + 1),
-                    data: line.data.slice(params.start, params.end + 1)
+            .reduce((arr, line) => {
+                if (params.filters[line.name]) {
+                    arr.push({
+                        ...line,
+                        coords: line.coords.slice(params.start, params.end + 1),
+                        data: line.data.slice(params.start, params.end + 1)
+                    })
                 }
-            })
-            .filter(line => params.filters[line.name]);
+                return arr;
+            }, []);
 
         this.redraw(params);
     }

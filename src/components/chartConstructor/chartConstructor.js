@@ -18,6 +18,8 @@ import './chartConstructor.scss';
 
 class ChartConstructor {
     constructor(params) {
+        var fragment = document.createDocumentFragment();
+
         this._chartId = Date.now();
 
         this.container = document.createElement('div');
@@ -33,7 +35,7 @@ class ChartConstructor {
         this.chartTitle.classList.add('chart-title');
         this.chartTitle.innerHTML = params.title;
 
-        this.container.appendChild(this.chartTitle);
+        fragment.appendChild(this.chartTitle);
 
         this.data = prepareData(params.data);
 
@@ -51,17 +53,17 @@ class ChartConstructor {
         });
         this._createElementsForDetalization();
 
-        this.container.appendChild(this.detailsPanel);
+        fragment.appendChild(this.detailsPanel);
 
         this.searchPanel = new SearchPanel({
             data: this.data,
-            container: this.container,
+            container: fragment,
             width: params.width - 24,
             rangeHeight: Math.max(params.height / 4, 100),
             onUpdate: (params, isFirst) => {
                 this._hideDetalization();
                 this.mainChart.updateCurrentData(params, isFirst);
-                this._prepareDetaisData({
+                this._prepareDetailsData({
                     dates: this.mainChart.currentChartState.dates,
                     lines: this.mainChart.currentChartState.cuttedData
                 });
@@ -86,6 +88,7 @@ class ChartConstructor {
             }
         });
 
+        this.container.appendChild(fragment);
         document.querySelector('.chart').appendChild(this.container);
     }
 
@@ -100,7 +103,9 @@ class ChartConstructor {
      * 
      * @param {Onject} data 
      */
-    _prepareDetaisData(data) {
+    _prepareDetailsData(data) {
+        const fragment1 = document.createDocumentFragment();
+        const fragment2 = document.createDocumentFragment();
         const _items = data.dates.map(date => {
             return {
                 date,
@@ -119,20 +124,21 @@ class ChartConstructor {
             pointMarker.id = 'point-marker-' + line.name + this._chartId;
             pointMarker.style.backgroundColor = chartColors.main[state.currentTheme]
 
-            this.detailsPanel.appendChild(pointMarker);
-            this.detailsPopup.querySelector('.details-popup__info').appendChild(item);
+            fragment1.appendChild(pointMarker);
+            fragment2.appendChild(item);
 
             line.data.forEach((value, index) => {
-                const _temp = {
+                _items[index].x = line.coords[index].x;
+                _items[index].values.push({
                     name: line.name,
                     value: value,
                     y: line.coords[index].y
-                };
-
-                _items[index].x = line.coords[index].x;
-                _items[index].values.push(_temp);
+                });
             });
         });
+
+        this.detailsPanel.appendChild(fragment1);
+        this.detailsPopupInfo.appendChild(fragment2);
 
         this.currentData = _items;
     }
@@ -243,8 +249,11 @@ class ChartConstructor {
         this.detailsPopupInfo = document.createElement('div');
         this.detailsPopupInfo.classList.add('details-popup__info');
 
-        this.detailsPopup.appendChild(popupDate);
-        this.detailsPopup.appendChild(this.detailsPopupInfo);
+        var fragment = document.createDocumentFragment();
+        fragment.appendChild(popupDate);
+        fragment.appendChild(this.detailsPopupInfo);
+
+        this.detailsPopup.appendChild(fragment);
 
         this.pointMarker = document.createElement('div');
         this.pointMarker.classList.add('point-marker');
